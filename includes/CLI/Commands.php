@@ -30,6 +30,12 @@ class Commands {
      * [--dry-run]
      * : Preview what files would be offloaded without actually offloading them
      *
+     * [--yes]
+     * : Answer yes to the deletion confirmation
+     *
+     * [--verbose]
+     * : Show verbose information
+     *
      * ## EXAMPLES
      *
      *     wp advmo offload
@@ -41,8 +47,16 @@ class Commands {
      */
     public function offload( $args, $assoc_args ) {
         $process_all = isset( $assoc_args['all'] );
-        $batch_size = $process_all ? -1 : (int) $assoc_args['batch-size'];
+        $batch_size = $process_all ? -1 : (int) ( $assoc_args['batch-size'] ?? 50 );
         $dry_run = isset( $assoc_args['dry-run'] );
+        $verbose = isset( $assoc_args['verbose'] );
+        $skip_confirm = isset( $assoc_args['yes'] );
+
+        if ( $verbose ) {
+            WP_CLI::line( 'Verbose mode enabled' );
+            WP_CLI::line( 'Arguments received:' );
+            WP_CLI::line( print_r( $assoc_args, true ) );
+        }
 
         try {
             $cloud_provider_key = advmo_get_cloud_provider_key();
@@ -60,6 +74,28 @@ class Commands {
             ];
             $provider_name = $provider_names[ $cloud_provider_key ] ?? $cloud_provider_key;
 
+            // Get deletion settings
+            $advmo_settings = get_option( 'advmo_settings', array() );
+            $deleteLocalRule = isset( $advmo_settings['retention_policy'] ) ? (int) $advmo_settings['retention_policy'] : 0;
+
+            if ( $verbose ) {
+                WP_CLI::line( 'Debug - Initial settings:' );
+                WP_CLI::line( print_r( $advmo_settings, true ) );
+                WP_CLI::line( sprintf( 'Debug - Delete Local Rule: %d', $deleteLocalRule ) );
+            }
+
+            $deletionMode = '';
+            switch ( $deleteLocalRule ) {
+                case 1:
+                    $deletionMode = ' (Smart Local Cleanup enabled - will keep only originals)';
+                    break;
+                case 2:
+                    $deletionMode = ' (Full Cloud Migration enabled - will remove all local files)';
+                    break;
+                default:
+                    $deletionMode = ' (keeping local files)';
+            }
+
             $attachments = $this->get_unoffloaded_attachments( $batch_size );
             $total = count( $attachments );
 
@@ -73,7 +109,7 @@ class Commands {
                 $total,
                 _n( 'file', 'files', $total )
             ));
-            WP_CLI::line( sprintf( '%d files to be uploaded to %s', $total, $provider_name ) );
+            WP_CLI::line( sprintf( '%d files to be uploaded to %s%s', $total, $provider_name, $deletionMode ) );
             WP_CLI::line( '' );
 
             if ( $dry_run ) {
@@ -103,6 +139,7 @@ class Commands {
 
             $cloud_provider = CloudProviderFactory::create( $cloud_provider_key );
             $bulk_offloader = new BulkMediaOffloader( $cloud_provider );
+            $bulk_offloader->setSkipDeletion( true );
 
             WP_CLI::line( sprintf( 'Found %d files to offload', $total ) );
             $progress = \WP_CLI\Utils\make_progress_bar( 'Offloading files', $total );
@@ -112,27 +149,89 @@ class Commands {
                     $file_path = get_attached_file( $attachment_id );
                     $file_meta = wp_get_attachment_metadata( $attachment_id );
 
+                    if ( $verbose ) {
+                        WP_CLI::line( "\n=== Debug Information ===" );
+                        WP_CLI::line( "Attachment ID: {$attachment_id}" );
+                        WP_CLI::line( "File path: {$file_path}" );
+                        WP_CLI::line( 'File exists before upload: ' . ( file_exists( $file_path ) ? 'yes' : 'no' ) );
+                        WP_CLI::line( "Delete Local Rule: {$deleteLocalRule}" );
+                        WP_CLI::line( 'File permissions: ' . substr( sprintf( '%o', fileperms( $file_path ) ), -4 ) );
+                        WP_CLI::line( 'PHP user: ' . exec( 'whoami' ) );
+                        WP_CLI::line( 'Is symlink: ' . ( is_link( $file_path ) ? 'yes' : 'no' ) );
+                        WP_CLI::line( 'Real path: ' . realpath( $file_path ) );
+                        WP_CLI::line( '========================' );
+                    }
+
                     // Skip if file doesn't exist
                     if ( ! file_exists( $file_path ) ) {
                         WP_CLI::warning( sprintf( '✗ Skipped: %s (File not found)', basename( $file_path ) ) );
                         continue;
                     }
 
-                    // Ensure file metadata exists
-                    if ( ! is_array( $file_meta ) ) {
-                        $file_meta = array();
-                    }
-
-                    // Add filesize if missing
-                    if ( ! isset( $file_meta['filesize'] ) ) {
-                        $file_meta['filesize'] = filesize( $file_path );
-                        wp_update_attachment_metadata( $attachment_id, $file_meta );
-                    }
-
+                    // Upload without deletion
                     $bulk_offloader->task( $attachment_id );
                     WP_CLI::line( sprintf( '✓ Offloaded: %s', basename( $file_path ) ) );
+
+                    // Ask about deletion
+                    if ( $deleteLocalRule > 0 && ! $dry_run ) {
+                        if ( $verbose ) {
+                            WP_CLI::line( 'Asking for deletion confirmation...' );
+                        }
+
+                        $confirmed = false;
+                        if ( $skip_confirm ) {
+                            $confirmed = true;
+                            if ( $verbose ) {
+                                WP_CLI::line( 'Auto-confirming due to --yes flag' );
+                            }
+                        } else {
+                            fwrite( STDOUT, 'Delete local file ' . basename( $file_path ) . '? [y/n]: ' );
+                            $answer = strtolower( trim( fgets( STDIN ) ) );
+                            $confirmed = ( $answer === 'y' || $answer === 'yes' );
+                        }
+
+                        if ( $verbose ) {
+                            WP_CLI::line( 'Confirmation result: ' . ( $confirmed ? 'yes' : 'no' ) );
+                        }
+
+                        if ( $confirmed ) {
+                            if ( $verbose ) {
+                                WP_CLI::line( "\n=== Starting Deletion Process ===" );
+                            }
+
+                            $real_path = realpath( $file_path );
+
+                            if ( $verbose ) {
+                                WP_CLI::line( "Using direct file operations to delete: {$real_path}" );
+                            }
+
+                            if ( file_exists( $real_path ) ) {
+                                // Direct file deletion
+                                $result = @unlink( $real_path );
+
+                                if ( $verbose ) {
+                                    WP_CLI::line( 'Deletion result: ' . ( $result ? 'Success' : 'Failed' ) );
+                                    if ( ! $result ) {
+                                        WP_CLI::line( 'PHP error: ' . error_get_last()['message'] ?? 'No error message' );
+                                    }
+                                }
+
+                                // Verify deletion
+                                clearstatcache( true, $real_path );
+                                if ( file_exists( $real_path ) ) {
+                                    WP_CLI::error( "Failed to delete file: {$real_path}" );
+                                } elseif ( $verbose ) {
+                                        WP_CLI::success( 'File successfully deleted' );
+                                }
+                            } elseif ( $verbose ) {
+                                    WP_CLI::warning( "File not found for deletion: {$real_path}" );
+                            }
+                        } elseif ( $verbose ) {
+                                WP_CLI::line( 'Deletion skipped - user did not confirm' );
+                        }
+                    }
                 } catch ( \Exception $e ) {
-                    WP_CLI::warning( sprintf( '✗ Failed to offload %s: %s', basename( $file_path ), $e->getMessage() ) );
+                    WP_CLI::warning( sprintf( '✗ Failed to process %s: %s', basename( $file_path ), $e->getMessage() ) );
                 }
                 $progress->tick();
             }
@@ -166,5 +265,19 @@ class Commands {
                 ],
             ],
         ]);
+    }
+
+    private function delete_sized_images( $attachment_id ) {
+        $metadata = wp_get_attachment_metadata( $attachment_id );
+        if ( isset( $metadata['sizes'] ) && is_array( $metadata['sizes'] ) ) {
+            $upload_dir = wp_upload_dir();
+            $path = trailingslashit( $upload_dir['path'] );
+            foreach ( $metadata['sizes'] as $size => $sizeinfo ) {
+                $sized_file = $path . $sizeinfo['file'];
+                if ( file_exists( $sized_file ) ) {
+                    wp_delete_file( $sized_file );
+                }
+            }
+        }
     }
 }
