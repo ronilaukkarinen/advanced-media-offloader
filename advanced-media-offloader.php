@@ -1,5 +1,5 @@
 <?php
-/*
+ /**
  * Plugin Name:       Advanced Media Offloader
  * Plugin URI:        https://wpfitter.com/plugins/advanced-media-offloader/
  * Description:       Offload WordPress media to Amazon S3, DigitalOcean Spaces, Min.io or Cloudflare R2.
