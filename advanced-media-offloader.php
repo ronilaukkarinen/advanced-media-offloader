@@ -5,6 +5,7 @@
  * Description:       Offload WordPress media to Amazon S3, DigitalOcean Spaces, Min.io or Cloudflare R2.
  * Version:           2.0.3-dev
  * Requires at least: 5.6
+ * Tested up to:      6.7.1
  * Requires PHP:      8.1
  * Author:            WP Fitter
  * Author URI:        https://wpfitter.com/
