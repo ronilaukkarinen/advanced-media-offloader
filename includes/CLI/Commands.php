@@ -24,6 +24,9 @@ class Commands {
      * default: 50
      * ---
      *
+     * [--all]
+     * : Process all files instead of using batch size
+     *
      * [--dry-run]
      * : Preview what files would be offloaded without actually offloading them
      *
@@ -31,12 +34,14 @@ class Commands {
      *
      *     wp advmo offload
      *     wp advmo offload --batch-size=100
+     *     wp advmo offload --all
      *     wp advmo offload --dry-run
      *
      * @when after_wp_load
      */
     public function offload($args, $assoc_args) {
-        $batch_size = (int) $assoc_args['batch-size'];
+        $process_all = isset($assoc_args['all']);
+        $batch_size = $process_all ? -1 : (int) $assoc_args['batch-size'];
         $dry_run = isset($assoc_args['dry-run']);
 
         try {
@@ -46,6 +51,15 @@ class Commands {
                 return;
             }
 
+            // Get provider name for display
+            $provider_names = [
+                's3' => 'Amazon S3',
+                'do' => 'DigitalOcean Spaces',
+                'minio' => 'MinIO',
+                'r2' => 'Cloudflare R2'
+            ];
+            $provider_name = $provider_names[$cloud_provider_key] ?? $cloud_provider_key;
+
             $attachments = $this->get_unoffloaded_attachments($batch_size);
             $total = count($attachments);
 
@@ -53,6 +67,14 @@ class Commands {
                 WP_CLI::success('No files need to be offloaded.');
                 return;
             }
+
+            // Display summary
+            WP_CLI::line(sprintf('You have %d %s still stored on your server.',
+                $total,
+                _n('file', 'files', $total)
+            ));
+            WP_CLI::line(sprintf('%d files to be uploaded to %s', $total, $provider_name));
+            WP_CLI::line('');
 
             if ($dry_run) {
                 WP_CLI::line(sprintf('Found %d files that would be offloaded:', $total));
@@ -108,7 +130,7 @@ class Commands {
         return get_posts([
             'post_type' => 'attachment',
             'post_status' => 'any',
-            'posts_per_page' => $batch_size,
+            'posts_per_page' => $batch_size < 0 ? -1 : $batch_size,
             'fields' => 'ids',
             'orderby' => 'post_date',
             'order' => 'ASC',
