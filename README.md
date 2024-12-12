@@ -1,6 +1,6 @@
 # Advanced Media Offloader
 
-This is an unofficial fork of the [Advanced Media Offloader](https://github.com/wpfitter/advanced-media-offloader) plugin.
+This is an unofficial fork of the [Advanced Media Offloader](https://wordpress.org/plugins/advanced-media-offloader/) plugin.
 
 ## Description
 
