@@ -15,6 +15,10 @@ Offload WordPress media to Amazon S3, DigitalOcean Spaces, Min.io or Cloudflare 
 
 ## WP CLI Support
 
+```bash
+wp advmo offload [--batch <number>] [--dry-run] [--verbose] [--all] [--yes] 
+```
+
 - `wp advmo offload` - Offload media to cloud storage.
 - `wp advmo offload --dry-run` - Preview what files would be offloaded without actually offloading them.
 - `wp advmo offload --batch-size=100` - Offload 100 files per batch.
