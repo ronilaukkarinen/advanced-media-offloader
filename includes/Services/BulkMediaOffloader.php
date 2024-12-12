@@ -19,7 +19,7 @@ class BulkMediaOffloader extends WP_Background_Process
         $this->cloudAttachmentUploader = new CloudAttachmentUploader($cloudProvider);
     }
 
-    protected function task($item)
+    public function task($item)
     {
         // $item is the attachment ID
         $this->cloudAttachmentUploader->uploadAttachment($item);
