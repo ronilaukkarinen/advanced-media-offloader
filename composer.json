@@ -1,0 +1,35 @@
+{
+	"type": "wordpress-plugin",
+	"autoload": {
+		"psr-4": {
+			"Advanced_Media_Offloader\\": "includes/"
+		}
+	},
+	"require": {
+		"aws/aws-sdk-php": "^3.331.0"
+	},
+	"extra": {
+		"aws/aws-sdk-php": [
+			"CloudFront"
+		]
+	},
+	"scripts": {
+		"package": [
+			"composer install --no-dev --optimize-autoloader --prefer-dist",
+			"cd .. && zip -r advanced-media-offloader.zip advanced-media-offloader -x 'advanced-media-offloader/.git/*' -x 'advanced-media-offloader/.gitignore' -x 'advanced-media-offloader/.github/*' -x 'advanced-media-offloader/composer.lock' -x 'advanced-media-offloader/*.md' -x 'advanced-media-offloader/.phpcs.xml' -x 'advanced-media-offloader/.editorconfig'"
+		],
+		"pre-autoload-dump": "Aws\\Script\\Composer\\Composer::removeUnusedServices",
+		"install-scripts": [
+			"composer dump-autoload"
+		]
+	},
+	"require-dev": {
+		"wp-coding-standards/wpcs": "^3.1",
+		"dealerdirect/phpcodesniffer-composer-installer": "^1.0"
+	},
+	"config": {
+		"allow-plugins": {
+			"dealerdirect/phpcodesniffer-composer-installer": true
+		}
+	}
+}
