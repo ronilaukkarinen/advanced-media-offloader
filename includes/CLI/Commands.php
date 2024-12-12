@@ -110,6 +110,25 @@ class Commands {
             foreach ($attachments as $attachment_id) {
                 try {
                     $file_path = get_attached_file($attachment_id);
+                    $file_meta = wp_get_attachment_metadata($attachment_id);
+
+                    // Skip if file doesn't exist
+                    if (!file_exists($file_path)) {
+                        WP_CLI::warning(sprintf('✗ Skipped: %s (File not found)', basename($file_path)));
+                        continue;
+                    }
+
+                    // Ensure file metadata exists
+                    if (!is_array($file_meta)) {
+                        $file_meta = array();
+                    }
+
+                    // Add filesize if missing
+                    if (!isset($file_meta['filesize'])) {
+                        $file_meta['filesize'] = filesize($file_path);
+                        wp_update_attachment_metadata($attachment_id, $file_meta);
+                    }
+
                     $bulk_offloader->task($attachment_id);
                     WP_CLI::line(sprintf('✓ Offloaded: %s', basename($file_path)));
                 } catch (\Exception $e) {
