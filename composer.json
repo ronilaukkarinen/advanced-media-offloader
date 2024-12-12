@@ -1,4 +1,8 @@
 {
+  "name": "ronilaukkarinen/advanced-media-offloader",
+  "description": "Advanced Media Offloader",
+  "version": "2.0.3-dev",
+  "license": "GPL-2.0-or-later",
   "type": "wordpress-plugin",
   "autoload": {
     "psr-4": {
