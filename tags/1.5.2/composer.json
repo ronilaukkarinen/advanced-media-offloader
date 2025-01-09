@@ -1,0 +1,30 @@
+{
+	"type": "wordpress-plugin",
+	"autoload": {
+		"psr-4": {
+			"Advanced_Media_Offloader\\": "includes/"
+		},
+		"files": [
+			"utility-functions.php"
+		]
+	},
+	"require": {
+		"aws/aws-sdk-php": "^3.321.6",
+		"deliciousbrains/wp-background-processing": "^1.3"
+	},
+	"extra": {
+		"aws/aws-sdk-php": [
+			"CloudFront"
+		]
+	},
+	"scripts": {
+		"package": [
+			"composer install --no-dev --optimize-autoloader --prefer-dist",
+			"cd .. && zip -r advanced-media-offloader.zip advanced-media-offloader -x 'advanced-media-offloader/.git/*' -x 'advanced-media-offloader/.gitignore' -x 'advanced-media-offloader/.github/*' -x 'advanced-media-offloader/composer.lock' -x 'advanced-media-offloader/*.md'"
+		],
+		"pre-autoload-dump": "Aws\\Script\\Composer\\Composer::removeUnusedServices",
+		"install-scripts": [
+			"composer dump-autoload"
+		]
+	}
+}

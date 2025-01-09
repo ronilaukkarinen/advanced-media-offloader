@@ -1,0 +1,156 @@
+/* General styles */
+#advmo .wrap {
+	max-width: 800px;
+	margin: 20px auto;
+	background: #fff;
+	padding: 30px;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+	border-radius: 4px;
+	overflow: hidden;
+}
+
+#advmo h1 {
+	color: #23282d;
+	font-size: 24px;
+	margin-bottom: 20px;
+}
+
+/* Form styles */
+#advmo form {
+	margin-top: 20px;
+}
+
+#advmo .form-table {
+	margin-top: 20px;
+	border-collapse: separate;
+	border-spacing: 0 15px;
+}
+
+#advmo .form-table th {
+	font-weight: 600;
+	padding: 20px 10px 20px 0;
+	width: 200px;
+	vertical-align: top;
+}
+
+#advmo .form-table td {
+	padding: 15px 10px;
+	vertical-align: middle;
+}
+
+/* Field styles */
+#advmo select,
+#advmo input[type="text"],
+#advmo input[type="password"] {
+	width: 100%;
+	max-width: 400px;
+	padding: 8px;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+}
+
+/* Checkbox style */
+#advmo input[type="checkbox"] {
+	margin-right: 10px;
+}
+
+/* Description style */
+#advmo .description {
+	font-style: italic;
+	color: #666;
+	margin-top: 5px;
+}
+
+/* Submit button */
+#advmo .submit {
+	margin-top: 20px;
+}
+
+#advmo .button-primary {
+	background: #0085ba;
+	border-color: #0073aa #006799 #006799;
+	color: #fff;
+	padding: 10px 15px;
+	font-size: 14px;
+	border-radius: 3px;
+	cursor: pointer;
+	transition: all 0.3s ease;
+}
+
+#advmo .button-primary:hover {
+	background: #008ec2;
+}
+
+/* Responsive design */
+@media screen and (max-width: 782px) {
+	#advmo .form-table th,
+	#advmo .form-table td {
+		display: block;
+		width: 100%;
+		padding: 10px 0;
+	}
+
+	#advmo .form-table th {
+		padding-bottom: 0;
+	}
+}
+
+/* Custom styles for credential fields */
+#advmo .advmo-credentials-field {
+	margin-bottom: 15px;
+}
+
+#advmo .advmo-credentials-field label {
+	display: block;
+	margin-bottom: 5px;
+	font-weight: 600;
+}
+
+/* Test connection button */
+#advmo .advmo-test-connection {
+	margin-top: 10px;
+}
+
+/* Notification styles */
+#advmo .advmo-notification {
+	padding: 10px 15px;
+	border-radius: 3px;
+	margin-top: 20px;
+}
+
+#advmo .advmo-notification.success {
+	background-color: #dff0d8;
+	border: 1px solid #d6e9c6;
+	color: #3c763d;
+}
+
+#advmo .advmo-notification.error {
+	background-color: #f2dede;
+	border: 1px solid #ebccd1;
+	color: #a94442;
+}
+
+/* Custom styles for the "Test connection" button */
+
+.advmo-test-connection-container {
+	margin-top: 10px;
+}
+.advmo-test-connection-result {
+	margin-top: 10px;
+}
+.advmo-test-success {
+	color: green;
+	font-weight: bold;
+}
+.advmo-test-error {
+	color: red;
+	font-weight: bold;
+}
+.advmo-test-success .dashicons,
+.advmo-test-error .dashicons {
+	vertical-align: middle;
+}
+
+#bulk-offload-button {
+	margin: 0.6rem 0;
+}
