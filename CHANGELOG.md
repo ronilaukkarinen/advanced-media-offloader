@@ -1,4 +1,4 @@
-### 3.1.1: 2025-01-09
+### 3.1.1rc: 2025-01-09
 
 * Merge changes from revision 3219756 of advanced-media-offloader, svn trunk version 3.0.0 (prefixed with Upstream)
 * Format changes with PHPCBF
