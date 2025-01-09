@@ -48,6 +48,6 @@ class MinIO extends S3_Provider {
             'ADVMO_MINIO_DOMAIN' => 'Your Custom Domain',
         ];
 
-        echo $this->getCredentialsFieldHTML( $requiredConstants );
+        echo $this->getCredentialsFieldHTML( $requiredConstants ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
     }
 }

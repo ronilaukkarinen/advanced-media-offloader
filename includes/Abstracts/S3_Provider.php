@@ -37,18 +37,15 @@ abstract class S3_Provider {
 		return $missingConstants;
 	}
 
-	abstract function getBucket();
+	abstract function getBucket(); // phpcs:ignore Squiz.Scope.MethodScope.Missing
 
-	abstract function getProviderName();
+	abstract function getProviderName(); // phpcs:ignore Squiz.Scope.MethodScope.Missing
 
-	abstract function getDomain();
+	abstract function getDomain(); // phpcs:ignore Squiz.Scope.MethodScope.Missing
 
 	/**
 	 * Upload a file to the specified bucket.
 	 *
-	 * @param string $file Path to the file to upload.
-	 * @param string $key The key to store the file under in the bucket.
-	 * @param string $bucket The bucket to upload the file to.
 	 * @return string URL of the uploaded object.
 	 */
 	public function uploadFile( $file, $key ) {

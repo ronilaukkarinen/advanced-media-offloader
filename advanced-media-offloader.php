@@ -202,7 +202,7 @@ if ( ! class_exists( 'ADVMO' ) ) {
 		}
 	}
 
-	function advmo() {
+	function advmo() { // phpcs:ignore Universal.Files.SeparateFunctionsFromOO.Mixed
 		global $advmo;
 
 		// Instantiate only once.

@@ -65,7 +65,7 @@ if ( ! function_exists( 'advmo_vd' ) ) {
  */
 if ( ! function_exists( 'advmo_get_copyright_text' ) ) {
 	function advmo_get_copyright_text() {
-		$year = date( 'Y' );
+		$year = gmdate( 'Y' );
 		$site_url = 'https://wpfitter.com/?utm_source=wp-plugin&utm_medium=plugin&utm_campaign=advanced-media-offloader';
 		$support_url = 'https://wpfitter.com/contact/?utm_source=wp-plugin&utm_medium=plugin&utm_campaign=advanced-media-offloader';
 

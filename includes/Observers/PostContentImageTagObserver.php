@@ -6,6 +6,11 @@ use Advanced_Media_Offloader\Abstracts\S3_Provider;
 use Advanced_Media_Offloader\Interfaces\ObserverInterface;
 use Advanced_Media_Offloader\Traits\OffloaderTrait;
 
+/**
+ * Observer class for handling image tags in post content.
+ *
+ * This class modifies image URLs in post content to use the offloaded cloud storage URLs.
+ */
 class PostContentImageTagObserver implements ObserverInterface {
 
     use OffloaderTrait;
@@ -25,7 +30,7 @@ class PostContentImageTagObserver implements ObserverInterface {
     /**
      * Constructor.
      *
-     * @param S3_Provider $cloudProvider
+     * @param S3_Provider $cloudProvider The cloud storage provider instance.
      */
     public function __construct( S3_Provider $cloudProvider ) {
         $this->cloudProvider = $cloudProvider;
@@ -41,13 +46,12 @@ class PostContentImageTagObserver implements ObserverInterface {
     }
 
     /**
-     * Modify the image srcset.
-     * @param array $sources
-     * @param array $size_array
-     * @param array $image_src
-     * @param array $image_meta
-     * @param int   $attachment_id
-     * @return array
+     * Modify the image tag to use the offloaded URL.
+     *
+     * @param string $filtered_image The current image tag HTML.
+     * @param string $context       The context in which the image tag is being filtered.
+     * @param int    $attachment_id The attachment ID for the image.
+     * @return string Modified image tag HTML.
      */
     public function run( $filtered_image, $context, $attachment_id ) {
         if ( ! $this->is_offloaded( $attachment_id ) ) {
@@ -65,6 +69,12 @@ class PostContentImageTagObserver implements ObserverInterface {
         return $filtered_image;
     }
 
+    /**
+     * Extract the src attribute from an image tag.
+     *
+     * @param string $image_tag The HTML image tag to parse.
+     * @return string The extracted src URL or empty string if not found.
+     */
     private function get_image_src( $image_tag ) {
         $src = '';
 

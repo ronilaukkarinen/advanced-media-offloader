@@ -25,7 +25,7 @@ class ImageSrcsetMetaObserver implements ObserverInterface {
     /**
      * Constructor.
      *
-     * @param S3_Provider $cloudProvider
+     * @param S3_Provider $cloudProvider The cloud storage provider instance.
      */
     public function __construct( S3_Provider $cloudProvider ) {
         $this->cloudProvider = $cloudProvider;

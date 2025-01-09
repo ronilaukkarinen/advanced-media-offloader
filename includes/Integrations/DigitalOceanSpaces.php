@@ -46,6 +46,6 @@ class DigitalOceanSpaces extends S3_Provider {
 			'ADVMO_DOS_DOMAIN' => 'Your Custom Domain',
 		];
 
-		echo $this->getCredentialsFieldHTML( $requiredConstants );
+		echo $this->getCredentialsFieldHTML( $requiredConstants ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	}
 }

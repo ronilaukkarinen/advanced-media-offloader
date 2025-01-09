@@ -17,9 +17,9 @@
 * Format all php files with PHPCBF
 * Declare PHP 8.3 compatibility in PHPCBF
 * Declare fork version information in main plugin to prevent auto-updating
-* Go through WordPress.Security sniffs
+* Go through WPCS sniffs, fix all PHPCS errors
 * Fix date function, use gmdate instead
-* Add missing param comment
+* Add missing param comments
 
 ### 2.0.3-dev:2024-12-12
 

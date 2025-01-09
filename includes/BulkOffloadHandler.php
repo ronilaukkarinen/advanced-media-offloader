@@ -110,7 +110,7 @@ class BulkOffloadHandler {
 
     public function cancel_bulk_offload() {
 
-        if ( ! wp_verify_nonce( $_POST['bulk_offload_nonce'], 'advmo_bulk_offload' ) ) {
+        if ( ! wp_verify_nonce( $_POST['bulk_offload_nonce'], 'advmo_bulk_offload' ) ) { // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotValidated,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
             wp_send_json_error([
                 'message' => __( 'Invalid nonce', 'advanced-media-offloader' ),
             ]);

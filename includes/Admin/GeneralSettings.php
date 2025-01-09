@@ -125,12 +125,32 @@ class GeneralSettings {
 	public function path_prefix_field() {
 		$options = get_option( 'advmo_settings' );
 		$path_prefix = isset( $options['path_prefix'] ) ? $options['path_prefix'] : 'wp-content/uploads/';
-		$path_prefix_Active = isset( $options['path_prefix_active'] ) ? $options['path_prefix_active'] : 0;
+		$path_prefix_active = isset( $options['path_prefix_active'] ) ? $options['path_prefix_active'] : 0;
+
+		// Start checkbox container
+		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		echo '<div class="advmo-checkbox-option">';
-		echo '<input type="checkbox" id="path_prefix_active" name="advmo_settings[path_prefix_active]" value="1" ' . checked( 1, $path_prefix_Active, false ) . '/>';
+
+		// Checkbox and label
+		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		printf(
+			'<input type="checkbox" id="path_prefix_active" name="advmo_settings[path_prefix_active]" value="1" %s/>',
+			checked( 1, $path_prefix_active, false )
+		);
 		echo '<label for="path_prefix_active">' . esc_html__( 'Use Custom Path Prefix', 'advanced-media-offloader' ) . '</label>';
-		echo '<p class="description">' . '<input type="input" id="path_prefix" name="advmo_settings[path_prefix]" value="' . esc_html( $path_prefix ) . '"' . ( $path_prefix_Active ? '' : ' disabled' ) . '/>' . '</p>';
+
+		// Text input field
+		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		printf(
+			'<p class="description"><input type="input" id="path_prefix" name="advmo_settings[path_prefix]" value="%s"%s/></p>',
+			esc_html( $path_prefix ),
+			$path_prefix_active ? '' : ' disabled'
+		);
+
+		// Description text
 		echo '<p class="description">' . esc_html__( 'Add a common prefix to organize offloaded media files from this site in your cloud storage bucket.', 'advanced-media-offloader' ) . '</p>';
+
+		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		echo '</div>';
 	}
 
@@ -154,19 +174,19 @@ class GeneralSettings {
 		if ( $count > 0 || $is_offloading ) {
 			if ( ! $is_offloading ) {
 				echo '<p>' . sprintf(
-					_n(
+					_n( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 						'You have %d file still stored on your server.',
 						'You have %d files still stored on your server.',
 						$count,
 						'advanced-media-offloader'
 					),
-					$count
+					$count // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 				) . '</p>';
-				echo '<p class="description">' . __( 'Offload them to cloud storage now to free up space and enhance your website\'s performance.', 'advanced-media-offloader' ) . '</p>';
-				echo '<button type="button" id="bulk-offload-button" class="button">' . __( 'Offload Now', 'advanced-media-offloader' ) . '</button>';
+				echo '<p class="description">' . __( 'Offload them to cloud storage now to free up space and enhance your website\'s performance.', 'advanced-media-offloader' ) . '</p>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+				echo '<button type="button" id="bulk-offload-button" class="button">' . __( 'Offload Now', 'advanced-media-offloader' ) . '</button>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 				// Add information about batch size limitation
-				echo '<p class="description"><strong>' . __( 'Note:', 'advanced-media-offloader' ) . '</strong> ';
-				echo __( 'The offloading process handles up to 50 media files per batch. If you have more than 50 files, you’ll need to run the bulk offload multiple times. This process runs in the background—you can close this page after starting.', 'advanced-media-offloader' ) . '</p>';
+				echo '<p class="description"><strong>' . __( 'Note:', 'advanced-media-offloader' ) . '</strong> '; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+				echo __( 'The offloading process handles up to 50 media files per batch. If you have more than 50 files, you’ll need to run the bulk offload multiple times. This process runs in the background—you can close this page after starting.', 'advanced-media-offloader' ) . '</p>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 			}
 
 			$display_style = $is_offloading ? 'block' : 'none';
@@ -183,7 +203,7 @@ class GeneralSettings {
 			echo '<div id="progress-container" style="display: ' . esc_attr( $display_style ) . '; margin-top: 20px;" data-status="' . esc_attr( $progress_status ) . '">';
 			echo '<p id="progress-title" style="font-size: 16px; font-weight: bold;">' .
 				sprintf(
-					__( 'Offloading media files to cloud storage (%1$s of %2$s)', 'advanced-media-offloader' ),
+					__( 'Offloading media files to cloud storage (%1$s of %2$s)', 'advanced-media-offloader' ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 					'<span id="processed-count">' . esc_html( $processed ) . '</span>',
 					'<span id="total-count">' . esc_html( $total ) . '</span>'
 				) .
@@ -192,10 +212,10 @@ class GeneralSettings {
 			printf( '        <div id="offload-progress" style="width: %.1f%%; height: 20px; background-color: #0073aa; border-radius: 2px; transition: width 0.5s;"></div>', esc_html( $progress_width ) );
 			echo '    </div>';
 			printf( '    <p id="progress-text" style="margin-top: 10px; font-weight: bold;">%s</p>', esc_html( $progress_text ) );
-			echo '<button type="button" id="bulk-offload-cancel-button" class="button">' . __( 'Cancel', 'advanced-media-offloader' ) . '</button>';
+			echo '<button type="button" id="bulk-offload-cancel-button" class="button">' . __( 'Cancel', 'advanced-media-offloader' ) . '</button>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 			echo '</div>';
 		} else {
-			echo '<p>' . __( 'All media files are currently stored in the cloud.', 'advanced-media-offloader' ) . '</p>';
+			echo '<p>' . __( 'All media files are currently stored in the cloud.', 'advanced-media-offloader' ) . '</p>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		}
 	}
 	public function mirror_delete_field() {

@@ -25,7 +25,7 @@ class ImageSrcsetObserver implements ObserverInterface {
     /**
      * Constructor.
      *
-     * @param S3_Provider $cloudProvider
+     * @param S3_Provider $cloudProvider The cloud storage provider instance.
      */
     public function __construct( S3_Provider $cloudProvider ) {
         $this->cloudProvider = $cloudProvider;
@@ -44,14 +44,14 @@ class ImageSrcsetObserver implements ObserverInterface {
 
     /**
      * Modify the image srcset.
-     * @param array $sources
-     * @param array $size_array
-     * @param array $image_src
-     * @param array $image_meta
-     * @param int   $attachment_id
-     * @return array
+     * @param array  $sources       Array of image sources with descriptor and URL.
+     * @param array  $size_array    Array of width and height values.
+     * @param string $image_src     The URL of the image.
+     * @param array  $image_meta    The image meta data.
+     * @param int    $attachment_id The attachment ID.
+     * @return array Modified array of image sources.
      */
-    public function run( array $sources, array $size_array, string $image_src, array $image_meta, int $attachment_id ) {
+    public function run( array $sources, array $size_array, string $image_src, array $image_meta, int $attachment_id ) { // phpcs:ignore Squiz.Commenting.FunctionComment.IncorrectTypeHint
         if ( ! $this->is_offloaded( $attachment_id ) ) {
             return $sources;
         }

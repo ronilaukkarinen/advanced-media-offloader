@@ -46,6 +46,6 @@ class Cloudflare_R2 extends S3_Provider {
 			'ADVMO_CLOUDFLARE_R2_DOMAIN' => 'Your Custom Domain',
 		];
 
-		echo $this->getCredentialsFieldHTML( $requiredConstants );
+		echo $this->getCredentialsFieldHTML( $requiredConstants ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	}
 }

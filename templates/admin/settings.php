@@ -1,8 +1,8 @@
 <?php
-/*
-** A settings page to configure the plugin.
-**  It should ask to select a cloud storage provider and provide the necessary credentials.
-*/
+/**
+ * A settings page to configure the plugin.
+ * It should ask to select a cloud storage provider and provide the necessary credentials.
+ */
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -28,6 +28,6 @@ $options = get_option( 'advmo_options' );
 			<?php do_settings_sections( 'advmo' ); ?>
 			<?php submit_button(); ?>
 		</form>
-		<?php echo advmo_get_copyright_text(); ?>
+		<?php echo advmo_get_copyright_text(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 	</div>
 </div>

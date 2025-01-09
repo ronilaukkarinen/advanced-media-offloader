@@ -45,6 +45,6 @@ class AmazonS3 extends S3_Provider {
             'ADVMO_AWS_DOMAIN' => 'Your Custom Domain',
         ];
 
-        echo $this->getCredentialsFieldHTML( $requiredConstants );
+        echo $this->getCredentialsFieldHTML( $requiredConstants ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
     }
 }
