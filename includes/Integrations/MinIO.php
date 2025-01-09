@@ -3,7 +3,7 @@
 namespace Advanced_Media_Offloader\Integrations;
 
 use Advanced_Media_Offloader\Abstracts\S3_Provider;
-use Aws\S3\S3Client;
+use WPFitter\Aws\S3\S3Client;
 
 class MinIO extends S3_Provider {
 
@@ -48,6 +48,6 @@ class MinIO extends S3_Provider {
             'ADVMO_MINIO_DOMAIN' => 'Your Custom Domain',
         ];
 
-        echo $this->getCredentialsFieldHTML( $requiredConstants ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+        echo $this->getCredentialsFieldHTML( $requiredConstants );
     }
 }

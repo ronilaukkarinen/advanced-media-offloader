@@ -75,9 +75,21 @@ class OffloadStatusObserver implements ObserverInterface {
             ];
         }
 
+        if ( $this->has_errors( $post_id ) ) {
+            // get url for this settings page: advmo_media_overview
+            $media_overview_page = admin_url( 'admin.php?page=advmo_media_overview' );
+            return [
+                'status' => sprintf(
+                    __( 'Offload failed - Action required. View details in <a href="%s">Media Overview</a>', 'advanced-media-offloader' ),
+                    esc_url( $media_overview_page )
+                ),
+                'color' => '#D32F2F',
+            ];
+        }
+
         return [
-            'status' => __( 'Not offloaded', 'advanced-media-offloader' ),
-            'color' => 'red',
+            'status' => __( 'Not offloaded yet.', 'advanced-media-offloader' ),
+            'color' => '#D32F2F',
         ];
     }
 
@@ -118,7 +130,12 @@ class OffloadStatusObserver implements ObserverInterface {
                 <span style="color: %s;">%s</span>
             </div>',
             esc_attr( $status_details['color'] ),
-            esc_html( $status_details['status'] )
+            wp_kses_post( $status_details['status'] )
         );
+    }
+
+    private function has_errors( int $attachment_id ): bool {
+        $errors = get_post_meta( $attachment_id, 'advmo_error_log', true );
+        return ! empty( $errors );
     }
 }

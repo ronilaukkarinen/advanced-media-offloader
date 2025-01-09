@@ -18,7 +18,7 @@ class AttachmentDeleteObserver implements ObserverInterface {
     /**
      * Constructor.
      *
-     * @param S3_Provider $cloudProvider The cloud storage provider instance.
+     * @param S3_Provider $cloudProvider
      */
     public function __construct( S3_Provider $cloudProvider ) {
         $this->cloudProvider = $cloudProvider;
@@ -54,7 +54,7 @@ class AttachmentDeleteObserver implements ObserverInterface {
      */
     private function performCloudFileDeletion( int $post_id ): void {
         try {
-            $result = $this->cloudProvider->deleteFile( $post_id );
+            $result = $this->cloudProvider->deleteAttachment( $post_id );
             if ( ! $result ) {
                 throw new \Exception( 'Cloud file deletion failed' );
             }

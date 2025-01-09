@@ -38,9 +38,9 @@ trait OffloaderTrait {
 
         // Generate a new version
         if ( ! advmo_is_media_organized_by_year_month() ) {
-            $new_version = gmdate( 'YmdHis' );
+            $new_version = date( 'YmdHis' );
         } else {
-            $new_version = gmdate( 'dHis' );
+            $new_version = date( 'dHis' );
         }
 
         // Save the new version in post meta
@@ -124,8 +124,8 @@ trait OffloaderTrait {
 
     private function shouldDeleteCloudFiles( $post ) {
         $advmo_settings = get_option( 'advmo_settings' );
-        $delete_after_offload = isset( $advmo_settings['mirror_delete'] ) && $advmo_settings['mirror_delete'] === '1';
+        $mirror_delete = isset( $advmo_settings['mirror_delete'] ) && $advmo_settings['mirror_delete'] === '1';
 
-        return $delete_after_offload && $post->post_type === 'attachment' && $this->is_offloaded( $post->ID );
+        return $mirror_delete && $post->post_type === 'attachment' && $this->is_offloaded( $post->ID );
     }
 }

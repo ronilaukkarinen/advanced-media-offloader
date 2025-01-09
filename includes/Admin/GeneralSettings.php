@@ -3,9 +3,10 @@
 namespace Advanced_Media_Offloader\Admin;
 
 use Advanced_Media_Offloader\Factories\CloudProviderFactory;
-use Advanced_Media_Offloader\BulkOffloadHandler;
 
 class GeneralSettings {
+
+	private static $instance = null;
 
 	/**
 	 * List of available cloud providers.
@@ -14,14 +15,21 @@ class GeneralSettings {
 	 */
 	protected array $cloud_providers;
 
-	public function __construct() {
+	public static function getInstance(): self {
+		if ( self::$instance === null ) {
+			self::$instance = new self();
+		}
+
+		return self::$instance;
+	}
+
+	private function __construct() {
 		// Retrieve cloud providers from the factory
 		$this->cloud_providers = CloudProviderFactory::getAvailableProviders();
 		add_action( 'admin_menu', [ $this, 'add_settings_page' ] );
 		add_action( 'admin_init', [ $this, 'initialize' ] );
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_scripts' ] );
 		add_action( 'wp_ajax_advmo_test_connection', [ $this, 'check_connection_ajax' ] );
-		BulkOffloadHandler::get_instance();
 	}
 
 	public function initialize() {
@@ -33,7 +41,6 @@ class GeneralSettings {
 		$this->add_retention_policy_field();
 		$this->add_path_prefix_field();
 		$this->add_object_versioning_field();
-		$this->add_non_offloaded_media_field();
 		$this->add_mirror_delete_field();
 	}
 
@@ -42,27 +49,26 @@ class GeneralSettings {
 			'cloud_provider',
 			__( 'Cloud Provider', 'advanced-media-offloader' ),
 			function () {
-				echo '<p>' . esc_attr__( 'Select a cloud storage provider and provide the necessary credentials.', 'advanced-media-offloader' ) . '</p>';
+				echo '<p>' . esc_attr__( 'Select a cloud storage provider and provide the necessary credentials.', 'advanced-media-offloader' ) . '</p></div>';
 			},
-			'advmo'
+			'advmo',
+			[
+				'before_section' => '<div class="advmo-section advmo-cloud-provider-settings"><div class="advmo-section-header">',
+				'after_section' => '</div>',
+			]
 		);
 
 		add_settings_section(
 			'general_settings',
 			__( 'General Settings', 'advanced-media-offloader' ),
 			function () {
-				echo '<p>' . esc_attr__( 'Configure the core options for managing and offloading your media files to cloud storage.', 'advanced-media-offloader' ) . '</p>';
+				echo '<p>' . esc_attr__( 'Configure the core options for managing and offloading your media files to cloud storage.', 'advanced-media-offloader' ) . '</p></div>';
 			},
-			'advmo'
-		);
-
-		add_settings_section(
-			'media_overview',
-			__( 'Media Library Overview', 'advanced-media-offloader' ),
-			function () {
-				echo '<p>' . esc_attr__( 'Get a comprehensive overview of all media files in your WordPress library. Easily identify any files that haven’t been offloaded to the Cloud and offload them in bulk.', 'advanced-media-offloader' ) . '</p>';
-			},
-			'advmo'
+			'advmo',
+			[
+				'before_section' => '<div class="advmo-section advmo-general-settigns"><div class="advmo-section-header">',
+				'after_section' => '</div>',
+			]
 		);
 	}
 
@@ -72,7 +78,10 @@ class GeneralSettings {
 			__( 'Cloud Provider', 'advanced-media-offloader' ),
 			[ $this, 'cloud_provider_field' ],
 			'advmo',
-			'cloud_provider'
+			'cloud_provider',
+			[
+				'class' => 'advmo-field advmo-cloud-provider',
+			]
 		);
 	}
 
@@ -82,7 +91,10 @@ class GeneralSettings {
 			__( 'Credentials', 'advanced-media-offloader' ),
 			[ $this, 'cloud_provider_credentials_field' ],
 			'advmo',
-			'cloud_provider'
+			'cloud_provider',
+			[
+				'class' => 'advmo-field advmo-cloud-provider-credentials',
+			]
 		);
 	}
 	private function add_retention_policy_field() {
@@ -91,7 +103,10 @@ class GeneralSettings {
 			__( 'Retention Policy', 'advanced-media-offloader' ),
 			[ $this, 'retention_policy_field' ],
 			'advmo',
-			'general_settings'
+			'general_settings',
+			[
+				'class' => 'advmo-field advmo-retention_policy',
+			]
 		);
 	}
 	private function add_mirror_delete_field() {
@@ -100,57 +115,48 @@ class GeneralSettings {
 			__( 'Mirror Delete', 'advanced-media-offloader' ),
 			[ $this, 'mirror_delete_field' ],
 			'advmo',
-			'general_settings'
+			'general_settings',
+			[
+				'class' => 'advmo-field advmo-mirror-delete',
+			]
 		);
 	}
 
 	private function add_object_versioning_field() {
-		add_settings_field( 'object_versioning', __( 'File Versioning', 'advanced-media-offloader' ), [ $this, 'object_versioning_field' ], 'advmo', 'general_settings' );
+		add_settings_field(
+			'object_versioning',
+			__( 'File Versioning', 'advanced-media-offloader' ),
+			[ $this, 'object_versioning_field' ],
+			'advmo',
+			'general_settings',
+			[
+				'class' => 'advmo-field advmo-object-versioning',
+			]
+		);
 	}
 
 	private function add_path_prefix_field() {
-		add_settings_field( 'path_prefix', __( 'Custom Path Prefix', 'advanced-media-offloader' ), [ $this, 'path_prefix_field' ], 'advmo', 'general_settings' );
-	}
-
-	private function add_non_offloaded_media_field() {
 		add_settings_field(
-			'non_offloaded_media',
-			__( 'Local Media Overview', 'advanced-media-offloader' ),
-			[ $this, 'non_offloaded_media_field' ],
+			'path_prefix',
+			__( 'Custom Path Prefix', 'advanced-media-offloader' ),
+			[ $this, 'path_prefix_field' ],
 			'advmo',
-			'media_overview'
+			'general_settings',
+			[
+				'class' => 'advmo-field advmo-path-prefix',
+			]
 		);
 	}
 
 	public function path_prefix_field() {
 		$options = get_option( 'advmo_settings' );
 		$path_prefix = isset( $options['path_prefix'] ) ? $options['path_prefix'] : 'wp-content/uploads/';
-		$path_prefix_active = isset( $options['path_prefix_active'] ) ? $options['path_prefix_active'] : 0;
-
-		// Start checkbox container
-		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		$path_prefix_Active = isset( $options['path_prefix_active'] ) ? $options['path_prefix_active'] : 0;
 		echo '<div class="advmo-checkbox-option">';
-
-		// Checkbox and label
-		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-		printf(
-			'<input type="checkbox" id="path_prefix_active" name="advmo_settings[path_prefix_active]" value="1" %s/>',
-			checked( 1, $path_prefix_active, false )
-		);
+		echo '<input type="checkbox" id="path_prefix_active" name="advmo_settings[path_prefix_active]" value="1" ' . checked( 1, $path_prefix_Active, false ) . '/>';
 		echo '<label for="path_prefix_active">' . esc_html__( 'Use Custom Path Prefix', 'advanced-media-offloader' ) . '</label>';
-
-		// Text input field
-		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-		printf(
-			'<p class="description"><input type="input" id="path_prefix" name="advmo_settings[path_prefix]" value="%s"%s/></p>',
-			esc_html( $path_prefix ),
-			$path_prefix_active ? '' : ' disabled'
-		);
-
-		// Description text
+		echo '<p class="description">' . '<input type="input" id="path_prefix" name="advmo_settings[path_prefix]" value="' . esc_html( $path_prefix ) . '"' . ( $path_prefix_Active ? '' : ' disabled' ) . '/>' . '</p>';
 		echo '<p class="description">' . esc_html__( 'Add a common prefix to organize offloaded media files from this site in your cloud storage bucket.', 'advanced-media-offloader' ) . '</p>';
-
-		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		echo '</div>';
 	}
 
@@ -165,59 +171,6 @@ class GeneralSettings {
 		echo '</div>';
 	}
 
-	public function non_offloaded_media_field() {
-		$bulk_offload_data = advmo_get_bulk_offload_data();
-		$count = advmo_get_unoffloaded_media_items_count();
-		$is_offloading = $bulk_offload_data['status'] === 'processing';
-		$progress = ( $is_offloading && $bulk_offload_data['total'] > 0 ) ? ( $bulk_offload_data['processed'] / $bulk_offload_data['total'] ) * 100 : 0;
-
-		if ( $count > 0 || $is_offloading ) {
-			if ( ! $is_offloading ) {
-				echo '<p>' . sprintf(
-					_n( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-						'You have %d file still stored on your server.',
-						'You have %d files still stored on your server.',
-						$count,
-						'advanced-media-offloader'
-					),
-					$count // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-				) . '</p>';
-				echo '<p class="description">' . __( 'Offload them to cloud storage now to free up space and enhance your website\'s performance.', 'advanced-media-offloader' ) . '</p>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-				echo '<button type="button" id="bulk-offload-button" class="button">' . __( 'Offload Now', 'advanced-media-offloader' ) . '</button>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-				// Add information about batch size limitation
-				echo '<p class="description"><strong>' . __( 'Note:', 'advanced-media-offloader' ) . '</strong> '; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-				echo __( 'The offloading process handles up to 50 media files per batch. If you have more than 50 files, you’ll need to run the bulk offload multiple times. This process runs in the background—you can close this page after starting.', 'advanced-media-offloader' ) . '</p>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-			}
-
-			$display_style = $is_offloading ? 'block' : 'none';
-			$progress_width = $is_offloading ? $progress : 0;
-			$progress_text = $is_offloading ? round( $progress ) . '%' : '0%';
-			if ( $is_offloading && $bulk_offload_data['total'] == 0 ) {
-				$progress_text = __( 'Preparing...', 'advanced-media-offloader' );
-			}
-
-			$progress_status = $is_offloading ? 'processing' : 'idle';
-			$processed = $bulk_offload_data['processed'] ?? 0;
-			$total = $bulk_offload_data['total'] ?? 0;
-
-			echo '<div id="progress-container" style="display: ' . esc_attr( $display_style ) . '; margin-top: 20px;" data-status="' . esc_attr( $progress_status ) . '">';
-			echo '<p id="progress-title" style="font-size: 16px; font-weight: bold;">' .
-				sprintf(
-					__( 'Offloading media files to cloud storage (%1$s of %2$s)', 'advanced-media-offloader' ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-					'<span id="processed-count">' . esc_html( $processed ) . '</span>',
-					'<span id="total-count">' . esc_html( $total ) . '</span>'
-				) .
-				'</p>';
-			echo '    <div class="progress-bar-container" style="width: 100%; background-color: #e0e0e0; padding: 3px; border-radius: 3px;">';
-			printf( '        <div id="offload-progress" style="width: %.1f%%; height: 20px; background-color: #0073aa; border-radius: 2px; transition: width 0.5s;"></div>', esc_html( $progress_width ) );
-			echo '    </div>';
-			printf( '    <p id="progress-text" style="margin-top: 10px; font-weight: bold;">%s</p>', esc_html( $progress_text ) );
-			echo '<button type="button" id="bulk-offload-cancel-button" class="button">' . __( 'Cancel', 'advanced-media-offloader' ) . '</button>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-			echo '</div>';
-		} else {
-			echo '<p>' . __( 'All media files are currently stored in the cloud.', 'advanced-media-offloader' ) . '</p>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-		}
-	}
 	public function mirror_delete_field() {
 		$options = get_option( 'advmo_settings' );
 		$mirror_delete = isset( $options['mirror_delete'] ) ? intval( $options['mirror_delete'] ) : 0;
@@ -276,14 +229,30 @@ class GeneralSettings {
 	}
 
 	public function add_settings_page() {
+
+		// Advanced Media Offload Logo as Icon
+		$svg_icon = '<svg width="358" height="258" viewBox="0 0 358 258" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<path fill-rule="evenodd" clip-rule="evenodd" d="M0.0100098 176.677C0.0100098 140.074 24.3664 109.179 57.758 99.2859C62.823 43.9549 109.353 0.616943 166.006 0.616943C207.398 0.616943 243.362 23.7509 261.718 57.7489C316.583 65.5989 357.99 115.763 357.99 171.712C357.99 203.324 345.663 225.134 329.249 238.845C313.363 252.115 294.346 257.237 280.921 257.383H280.848H280.776C240.825 257.383 208.247 225.816 206.624 186.263L201.404 192.33C196.595 197.919 188.166 198.551 182.577 193.741C176.988 188.932 176.356 180.503 181.165 174.914L202.899 149.657C212.952 137.974 231.116 138.198 240.879 150.125L261.374 175.166C266.044 180.872 265.204 189.283 259.498 193.953C253.792 198.623 245.381 197.783 240.711 192.077L233.261 182.975C233.261 183.039 233.261 183.104 233.261 183.168C233.261 209.385 254.494 230.643 280.701 230.683C288.571 230.579 301.441 227.284 312.132 218.353C322.328 209.836 331.29 195.601 331.29 171.712C331.29 126.154 295.784 86.5289 252.109 83.5669C250.177 83.4359 248.225 83.3689 246.256 83.3689C199.345 83.3689 161.307 121.356 161.223 168.247L161.423 176.516V176.677C161.423 221.25 125.289 257.383 80.716 257.383C36.143 257.383 0.0100098 221.25 0.0100098 176.677ZM100.765 99.042C96.041 97.338 89.913 96.4629 85.057 96.1309C91.366 57.1129 125.206 27.3169 166.006 27.3169C191.795 27.3169 214.82 39.222 229.861 57.863C175.925 65.794 134.522 112.263 134.522 168.402V168.563L134.722 176.829C134.64 206.586 110.492 230.683 80.716 230.683C50.89 230.683 26.7104 206.504 26.7104 176.677C26.7104 149.604 46.644 127.163 72.632 123.27C75.262 122.876 77.961 122.671 80.716 122.671C84.182 122.671 89.51 123.366 91.705 124.158C98.641 126.66 106.291 123.065 108.793 116.13C111.295 109.194 107.701 101.543 100.765 99.042Z" fill="#A7AAAD"/>
+					</svg>';
+		$icon_base64 = 'data:image/svg+xml;base64,' . base64_encode( $svg_icon );
+
 		add_menu_page(
 			__( 'Advanced Media Offloader', 'advanced-media-offloader' ),
 			__( 'Media Offloader', 'advanced-media-offloader' ),
 			'manage_options',
 			'advmo',
-			[ $this, 'settings_page_view' ],
-			'dashicons-cloud-upload',
+			[ $this, 'general_settings_page_view' ],
+			$icon_base64,
 			100
+		);
+
+		add_submenu_page(
+			'advmo',
+			__( 'General Settings', 'advanced-media-offloader' ),
+			__( 'General Settings', 'advanced-media-offloader' ),
+			'manage_options',
+			'advmo',
+			[ $this, 'general_settings_page_view' ]
 		);
 	}
 
@@ -327,20 +296,31 @@ class GeneralSettings {
 		}
 	}
 
-	public function settings_page_view() {
-		include ADVMO_PATH . 'templates/admin/settings.php';
+	public function general_settings_page_view() {
+		advmo_get_view( 'admin/general_settings' );
 	}
 
 	public function enqueue_scripts() {
-		if ( ! isset( $_GET['page'] ) || $_GET['page'] !== 'advmo' ) {
+		if ( ! advmo_is_settings_page() ) {
 			return;
 		}
-		wp_enqueue_script( 'advmo_settings', ADVMO_URL . 'assets/js/advmo_settings.js', [], ADVMO_VERSION, true );
-		wp_localize_script('advmo_settings', 'advmo_ajax_object', [
-			'ajax_url' => admin_url( 'admin-ajax.php' ),
-			'nonce' => wp_create_nonce( 'advmo_test_connection' ),
-			'bulk_offload_nonce' => wp_create_nonce( 'advmo_bulk_offload' ),
-		]);
+
+		if ( advmo_is_settings_page( 'general' ) ) {
+			wp_enqueue_script( 'advmo_settings', ADVMO_URL . 'assets/js/advmo_settings.js', [], ADVMO_VERSION, true );
+			wp_localize_script('advmo_settings', 'advmo_ajax_object', [
+				'ajax_url' => admin_url( 'admin-ajax.php' ),
+				'nonce' => wp_create_nonce( 'advmo_test_connection' ),
+			]);
+		}
+
+		if ( advmo_is_settings_page( 'media-overview' ) ) {
+			wp_enqueue_script( 'advmo_bulkoffload', ADVMO_URL . 'assets/js/advmo_bulkoffload.js', [], ADVMO_VERSION, true );
+			wp_localize_script('advmo_bulkoffload', 'advmo_ajax_object', [
+				'ajax_url' => admin_url( 'admin-ajax.php' ),
+				'bulk_offload_nonce' => wp_create_nonce( 'advmo_bulk_offload' ),
+			]);
+		}
+
 		wp_enqueue_style( 'advmo_admin', ADVMO_URL . 'assets/css/admin.css', [], ADVMO_VERSION );
 	}
 
@@ -381,4 +361,10 @@ class GeneralSettings {
 			wp_send_json_error( [ 'message' => __( 'Invalid Cloud Provider!', 'advanced-media-offloader' ) ] );
 		}
 	}
+
+	// Prevent cloning of the instance
+	private function __clone() {}
+
+	// Prevent unserializing of the instance
+	public function __wakeup() {}
 }

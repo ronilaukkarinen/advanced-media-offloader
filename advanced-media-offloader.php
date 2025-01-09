@@ -3,7 +3,7 @@
   * Plugin Name:       Advanced Media Offloader + WP-CLI
   * Plugin URI:        https://github.com/ronilaukkarinen/advanced-media-offloader
   * Description:       Offload WordPress media to Amazon S3, DigitalOcean Spaces, Min.io or Cloudflare R2. A fork with WP-CLI support, <code>wp advmo offload</code>.
-  * Version:           3.1.0
+  * Version:           3.1.1
   * Requires at least: 5.6
   * Tested up to:      6.7.1
   * Requires PHP:      8.1
@@ -118,15 +118,17 @@ if ( ! class_exists( 'ADVMO' ) ) {
 			}
 
 			// Include Composer autoload.
-			if ( file_exists( ADVMO_PATH . 'vendor/autoload.php' ) ) {
-				include_once ADVMO_PATH . 'vendor/autoload.php';
+			if ( file_exists( ADVMO_PATH . 'vendor/scoper-autoload.php' ) ) {
+				require_once ADVMO_PATH . 'vendor/scoper-autoload.php';
+			} elseif ( file_exists( ADVMO_PATH . 'vendor/autoload.php' ) ) {
+				require_once ADVMO_PATH . 'vendor/autoload.php';
 			}
 
 			// include Utility Functions
 			include_once ADVMO_PATH . 'utility-functions.php';
 
 			// check if AWS SDK is loaded
-			if ( ! class_exists( \Aws\S3\S3Client::class ) ) {
+			if ( ! class_exists( WPFitter\Aws\S3\S3Client::class ) ) {
 				// Show admin notice if AWS SDK is missing.
 				add_action('admin_notices', function () {
 					$this->notice( __( 'AWS SDK for PHP is required to use Advanced Media Offloader. Please install it via Composer.', 'advanced-media-offloader' ), 'error' );
@@ -136,7 +138,9 @@ if ( ! class_exists( 'ADVMO' ) ) {
 
 			// Include admin.
 			if ( is_admin() ) {
-				new Advanced_Media_Offloader\Admin\GeneralSettings();
+				Advanced_Media_Offloader\Admin\GeneralSettings::getInstance();
+				Advanced_Media_Offloader\Admin\MediaOverview::getInstance();
+				Advanced_Media_Offloader\Admin\Observers\CurrentScreen::getInstance();
 			}
 
 			$this->init();
@@ -171,11 +175,6 @@ if ( ! class_exists( 'ADVMO' ) ) {
 					});
 				}
 			}
-
-			// Initialize CLI commands if WP-CLI is available
-			if ( defined( 'WP_CLI' ) && WP_CLI ) {
-				new \Advanced_Media_Offloader\CLI\Commands();
-			}
 		}
 
 		/**
@@ -202,7 +201,7 @@ if ( ! class_exists( 'ADVMO' ) ) {
 		}
 	}
 
-	function advmo() { // phpcs:ignore Universal.Files.SeparateFunctionsFromOO.Mixed
+	function advmo() {
 		global $advmo;
 
 		// Instantiate only once.

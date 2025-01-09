@@ -37,15 +37,18 @@ abstract class S3_Provider {
 		return $missingConstants;
 	}
 
-	abstract function getBucket(); // phpcs:ignore Squiz.Scope.MethodScope.Missing
+	abstract function getBucket();
 
-	abstract function getProviderName(); // phpcs:ignore Squiz.Scope.MethodScope.Missing
+	abstract function getProviderName();
 
-	abstract function getDomain(); // phpcs:ignore Squiz.Scope.MethodScope.Missing
+	abstract function getDomain();
 
 	/**
 	 * Upload a file to the specified bucket.
 	 *
+	 * @param string $file Path to the file to upload.
+	 * @param string $key The key to store the file under in the bucket.
+	 * @param string $bucket The bucket to upload the file to.
 	 * @return string URL of the uploaded object.
 	 */
 	public function uploadFile( $file, $key ) {
@@ -149,47 +152,68 @@ abstract class S3_Provider {
 	 * @param int $attachment_id The WordPress attachment ID.
 	 * @return bool True on success, false on failure.
 	 */
-	public function deleteFile( $attachment_id ) {
-		$client = $this->getClient();
-		$bucket = $this->getBucket();
-
-		// Get the S3 key for the attachment
-		$attached_file = get_post_meta( $attachment_id, '_wp_attached_file', true );
-
-		$advmo_path = get_post_meta( $attachment_id, 'advmo_path', true );
-
-		if ( ! $attached_file || ! $advmo_path ) {
-			error_log( "Advanced Media Offloader: Error deleting file from S3: Unable to find S3 key for attachment ID {$attachment_id}" );
-			return false;
-		}
-
-		$file_name = basename( $attached_file );
-		$key = trailingslashit( $advmo_path ) . $file_name;
-
+	public function deleteAttachment( $attachment_id ) {
 		try {
 			// Delete the main file
-			$result = $client->deleteObject([
-				'Bucket' => $bucket,
-				'Key'    => $key,
-			]);
+			$key = $this->getAttachmentKey( $attachment_id );
+			$this->deleteS3Object( $key );
 
-			// Check if there are any thumbnails to delete
-			$metadata = wp_get_attachment_metadata( $attachment_id );
-			if ( isset( $metadata['sizes'] ) && is_array( $metadata['sizes'] ) ) {
+			if ( wp_attachment_is_image( $attachment_id ) ) {
 				$base_dir = trailingslashit( dirname( $key ) );
-
-				foreach ( $metadata['sizes'] as $size => $sizeinfo ) {
-					$thumbnail_key = $base_dir . $sizeinfo['file'];
-					$client->deleteObject([
-						'Bucket' => $bucket,
-						'Key'    => $thumbnail_key,
-					]);
-				}
+				$this->deleteImageSizes( $attachment_id, $base_dir );
+				$this->deleteImageBackupSizes( $attachment_id, $base_dir );
 			}
+
 			return true;
 		} catch ( \Exception $e ) {
 			error_log( "Advanced Media Offloader: Error deleting file from S3: {$e->getMessage()}" );
 			return false;
 		}
+	}
+
+	private function deleteImageSizes( $attachment_id, $base_dir ) {
+		// Check if there are any thumbnails to delete
+		$metadata = wp_get_attachment_metadata( $attachment_id );
+		// Make sure $sizes is always defined to allow the removal of original images after the first foreach loop.
+		$sizes = ! isset( $metadata['sizes'] ) || ! is_array( $metadata['sizes'] ) ? array() : $metadata['sizes'];
+
+		foreach ( $sizes as $size => $sizeinfo ) {
+			$thumbnail_key = $base_dir . $sizeinfo['file'];
+			$this->deleteS3Object( $thumbnail_key );
+		}
+	}
+	private function deleteImageBackupSizes( $attachment_id, $base_dir ) {
+		$backup_sizes = get_post_meta( $attachment_id, '_wp_attachment_backup_sizes', true );
+
+		if ( ! is_array( $backup_sizes ) ) {
+			return;
+		}
+
+		foreach ( $backup_sizes as $size => $sizeinfo ) {
+			$backup_key = $base_dir . $sizeinfo['file'];
+			$this->deleteS3Object( $backup_key );
+		}
+	}
+
+	private function getAttachmentKey( int $attachment_id ): string {
+		$attached_file = get_post_meta( $attachment_id, '_wp_attached_file', true );
+		$advmo_path = get_post_meta( $attachment_id, 'advmo_path', true );
+
+		if ( ! $attached_file || ! $advmo_path ) {
+			throw new \Exception( "Unable to find S3 key for attachment ID {$attachment_id}" );
+		}
+
+		$file_name = basename( $attached_file );
+		return trailingslashit( $advmo_path ) . $file_name;
+	}
+
+	private function deleteS3Object( string $key ): void {
+		$client = $this->getClient();
+		$bucket = $this->getBucket();
+
+		$client->deleteObject([
+			'Bucket' => $bucket,
+			'Key'    => $key,
+		]);
 	}
 }

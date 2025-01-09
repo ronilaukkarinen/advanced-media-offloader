@@ -18,7 +18,7 @@ class AttachmentUrlObserver implements ObserverInterface {
     /**
      * Constructor.
      *
-     * @param S3_Provider $cloudProvider The cloud storage provider instance.
+     * @param S3_Provider $cloudProvider
      */
     public function __construct( S3_Provider $cloudProvider ) {
         $this->cloudProvider = $cloudProvider;

@@ -1,7 +1,7 @@
 {
   "name": "ronilaukkarinen/advanced-media-offloader",
   "description": "Advanced Media Offloader",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "license": "GPL-2.0-or-later",
   "type": "wordpress-plugin",
   "autoload": {
@@ -19,12 +19,27 @@
   },
   "scripts": {
     "package": [
-      "composer install --no-dev --optimize-autoloader --prefer-dist",
-      "cd .. && zip -r advanced-media-offloader.zip advanced-media-offloader -x 'advanced-media-offloader/.git/*' -x 'advanced-media-offloader/.gitignore' -x 'advanced-media-offloader/.github/*' -x 'advanced-media-offloader/composer.lock' -x 'advanced-media-offloader/*.md' -x 'advanced-media-offloader/.phpcs.xml' -x 'advanced-media-offloader/.editorconfig'"
+      "composer scope-release",
+      "cd .. && zip -r advanced-media-offloader.zip advanced-media-offloader -x 'advanced-media-offloader/.git/*' -x 'advanced-media-offloader/.gitignore' -x 'advanced-media-offloader/.github/*' -x 'advanced-media-offloader/composer.lock' -x 'advanced-media-offloader/*.md' -x 'advanced-media-offloader/.phpcs.xml' -x 'advanced-media-offloader/.editorconfig' -x 'advanced-media-offloader/scoper.inc.php'"
     ],
     "pre-autoload-dump": "Aws\\Script\\Composer\\Composer::removeUnusedServices",
-    "install-scripts": [
-      "composer dump-autoload"
+    "scope-release": [
+      "rm -rf vendor",
+      "composer install --no-dev --optimize-autoloader --prefer-dist",
+      "~/.composer/vendor/bin/php-scoper add-prefix",
+      "rm -rf vendor",
+      "mv build/vendor vendor",
+      "rm -rf build",
+      "composer dump-autoload --classmap-authoritative"
+    ],
+    "scope-dev": [
+      "rm -rf vendor",
+      "composer install",
+      "~/.composer/vendor/bin/php-scoper add-prefix",
+      "rm -rf vendor",
+      "mv build/vendor vendor",
+      "rm -rf build",
+      "composer dump-autoload --classmap-authoritative"
     ]
   },
   "require-dev": {

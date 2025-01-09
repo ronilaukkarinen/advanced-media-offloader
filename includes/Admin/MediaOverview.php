@@ -192,7 +192,7 @@ class MediaOverview {
             $output .= "<p><a href='{$download_url}' class='button button-secondary'>Download Errors CSV</a></p>";
         }
 
-        echo $output; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+        echo $output;
     }
 
     private function get_attachments_with_errors() {
@@ -204,7 +204,7 @@ class MediaOverview {
             $meta_key
         );
 
-        return $wpdb->get_col( $query ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+        return $wpdb->get_col( $query );
     }
 
     public function handle_download_errors_csv() {
@@ -258,8 +258,8 @@ class MediaOverview {
 
 
     public function bulk_offload_media_field() {
-        echo '<p class="description"><strong>' . __( 'Note:', 'advanced-media-offloader' ) . '</strong> '; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-        echo __( 'The offloading process handles up to 50 media files per batch. If you have more than 50 files, you’ll need to run the bulk offload multiple times. This process runs in the background—you can close this page after starting.', 'advanced-media-offloader' ) . '</p><br />'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+        echo '<p class="description"><strong>' . __( 'Note:', 'advanced-media-offloader' ) . '</strong> ';
+        echo __( 'The offloading process handles up to 50 media files per batch. If you have more than 50 files, you’ll need to run the bulk offload multiple times. This process runs in the background—you can close this page after starting.', 'advanced-media-offloader' ) . '</p><br />';
 
         $bulk_offload_data = advmo_get_bulk_offload_data();
         $count = advmo_get_unoffloaded_media_items_count();
@@ -269,16 +269,16 @@ class MediaOverview {
         if ( $count > 0 || $is_offloading ) {
             if ( ! $is_offloading ) {
                 echo '<p>' . sprintf(
-                    _n( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+                    _n(
                         'You have %d file still stored on your server.',
                         'You have %d files still stored on your server.',
                         $count,
                         'advanced-media-offloader'
                     ),
-                    $count // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+                    $count
                 ) . '</p>';
-                echo '<p class="description">' . __( 'Offload them to cloud storage now to free up space and enhance your website\'s performance.', 'advanced-media-offloader' ) . '</p>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-                echo '<button type="button" id="bulk-offload-button" class="button">' . __( 'Offload Now', 'advanced-media-offloader' ) . '</button>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+                echo '<p class="description">' . __( 'Offload them to cloud storage now to free up space and enhance your website\'s performance.', 'advanced-media-offloader' ) . '</p>';
+                echo '<button type="button" id="bulk-offload-button" class="button">' . __( 'Offload Now', 'advanced-media-offloader' ) . '</button>';
             }
 
             $display_style = $is_offloading ? 'block' : 'none';
@@ -295,7 +295,7 @@ class MediaOverview {
             echo '<div id="progress-container" style="display: ' . esc_attr( $display_style ) . '; margin-top: 20px;" data-status="' . esc_attr( $progress_status ) . '">';
             echo '<p id="progress-title" style="font-size: 16px; font-weight: bold;">' .
                 sprintf(
-                    __( 'Offloading media files to cloud storage (%1$s of %2$s)', 'advanced-media-offloader' ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+                    __( 'Offloading media files to cloud storage (%1$s of %2$s)', 'advanced-media-offloader' ),
                     '<span id="processed-count">' . esc_html( $processed ) . '</span>',
                     '<span id="total-count">' . esc_html( $total ) . '</span>'
                 ) .
@@ -305,13 +305,13 @@ class MediaOverview {
             echo '    </div>';
             printf( '    <p id="progress-text" style="margin-top: 10px; font-weight: bold;">%s</p>', esc_html( $progress_text ) );
             if ( get_option( 'advmo_bulk_offload_cancelled' ) === false ) {
-                echo '<button type="button" id="bulk-offload-cancel-button" class="button">' . __( 'Cancel', 'advanced-media-offloader' ) . '</button>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+                echo '<button type="button" id="bulk-offload-cancel-button" class="button">' . __( 'Cancel', 'advanced-media-offloader' ) . '</button>';
             } else {
                 echo '<p>Canceling the bulk offload process…</p>';
             }
             echo '</div>';
         } else {
-            echo '<p>' . __( 'All media files are currently stored in the cloud.', 'advanced-media-offloader' ) . '</p>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+            echo '<p>' . __( 'All media files are currently stored in the cloud.', 'advanced-media-offloader' ) . '</p>';
         }
     }
 }

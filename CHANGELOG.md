@@ -11,6 +11,7 @@
 * Upstream: Fix various issues related to bulk offload JavaScript functionality.
 * Upstream: Improve error handling and notifications for media attachments in the library
 * Upstream: Refactor attachment deletion methods for better performance and reliability
+* Re-initiate WP CLI after merging upstream changes
 
 ### 3.1.0: 2025-01-09
 
