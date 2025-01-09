@@ -124,6 +124,11 @@ if ( ! class_exists( 'ADVMO' ) ) {
 				require_once ADVMO_PATH . 'vendor/autoload.php';
 			}
 
+			// Initialize CLI commands if WP-CLI is available
+			if ( defined( 'WP_CLI' ) && WP_CLI ) {
+				new Advanced_Media_Offloader\CLI\Commands();
+			}
+
 			// include Utility Functions
 			include_once ADVMO_PATH . 'utility-functions.php';
 
