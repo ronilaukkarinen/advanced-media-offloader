@@ -4,6 +4,8 @@
 * Format changes with PHPCBF
 * Exclude vendor directory from PHPCS checks
 * Simplify composer.json and remove scoper, there is no need for it since WordPress's plugin architecture naturally isolates plugins, AWS SDK uses its own namespaces (Aws\) which are unlikely to conflict
+* Add skip deletion option to bulk offloader
+* Add checks for WordPress upload directory and cloud provider settings
 * Make build work in both dev and production without having to manually run separate composer commands
 * Upstream: Introduce a new user interface (UI) and improved user experience (UX) for the settings page.
 * Upstream: Add functionality to offload and sync edited images with cloud storage

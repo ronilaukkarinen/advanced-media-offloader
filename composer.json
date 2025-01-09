@@ -11,7 +11,8 @@
   },
   "require": {
     "aws/aws-sdk-php": "^3.336",
-    "php": "^8.3"
+    "php": "^8.3",
+    "wp-cli/wp-cli-bundle": "^2.9"
   },
   "extra": {
     "aws/aws-sdk-php": [

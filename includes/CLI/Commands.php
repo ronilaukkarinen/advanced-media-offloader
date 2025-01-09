@@ -65,6 +65,29 @@ class Commands {
                 return;
             }
 
+            // Validate WordPress upload directory is writable
+            $upload_dir = wp_upload_dir();
+            if ( is_wp_error( $upload_dir ) ) {
+                WP_CLI::error( 'WordPress upload directory is not accessible: ' . $upload_dir->get_error_message() );
+                return;
+            }
+
+            // Validate cloud provider settings
+            $settings = get_option( 'advmo_settings', [] );
+            if ( empty( $settings['provider'] ) || empty( $settings['bucket'] ) ) {
+                WP_CLI::error( 'Cloud provider settings are incomplete. Please configure the plugin settings first.' );
+                return;
+            }
+
+            // Validate we can connect to the cloud provider
+            try {
+                $cloud_provider = CloudProviderFactory::create( $cloud_provider_key );
+                $cloud_provider->validateConnection();
+            } catch ( \Exception $e ) {
+                WP_CLI::error( 'Could not connect to cloud provider: ' . $e->getMessage() );
+                return;
+            }
+
             // Get provider name for display
             $provider_names = [
                 's3' => 'Amazon S3',

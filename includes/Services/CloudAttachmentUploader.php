@@ -15,17 +15,32 @@ class CloudAttachmentUploader {
         $this->cloudProvider = $cloudProvider;
     }
 
-    public function uploadAttachment( int $attachment_id ): bool {
-        if ( $this->is_offloaded( $attachment_id ) ) {
-            return true;
-        }
+    public function uploadAttachment( int $attachment_id, bool $skipDeletion = false ): bool {
+        try {
+            // Validate attachment exists
+            if ( ! wp_attachment_is_image( $attachment_id ) ) {
+                throw new \Exception( 'Attachment is not an image' );
+            }
 
-        if ( $this->uploadToCloud( $attachment_id ) ) {
-            $this->updateAttachmentMetadata( $attachment_id );
-            return true;
-        }
+            // Get file path
+            $file_path = get_attached_file( $attachment_id );
+            if ( ! file_exists( $file_path ) ) {
+                throw new \Exception( 'File does not exist' );
+            }
 
-        return false;
+            // Upload file
+            $result = $this->cloudProvider->upload( $file_path, $attachment_id );
+
+            if ( $result && ! $skipDeletion ) {
+                // Handle deletion based on retention policy
+                $this->handleLocalFileDeletion( $attachment_id );
+            }
+
+            return $result;
+        } catch ( \Exception $e ) {
+            error_log( 'Advanced Media Offloader upload error: ' . $e->getMessage() );
+            return false;
+        }
     }
 
     public function uploadUpdatedAttachment( int $attachment_id, array $metadata ): bool {

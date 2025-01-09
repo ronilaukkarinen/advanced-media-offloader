@@ -12,15 +12,24 @@ class BulkMediaOffloader extends WP_Background_Process {
     protected $action = 'bulk_offload_media_process';
 
     private CloudAttachmentUploader $cloudAttachmentUploader;
+    private bool $skipDeletion = false;
 
     public function __construct( S3_Provider $cloudProvider ) {
         parent::__construct();
         $this->cloudAttachmentUploader = new CloudAttachmentUploader( $cloudProvider );
     }
 
+    public function setSkipDeletion( bool $skip ): void {
+        $this->skipDeletion = $skip;
+    }
+
+    public function getSkipDeletion(): bool {
+        return $this->skipDeletion;
+    }
+
     protected function task( $item ) {
         // $item is the attachment ID
-        $result = $this->cloudAttachmentUploader->uploadAttachment( $item );
+        $result = $this->cloudAttachmentUploader->uploadAttachment( $item, $this->skipDeletion );
 
         // Update the processed count
         $this->update_processed_count( $result );
