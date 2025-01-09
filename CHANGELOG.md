@@ -1,7 +1,10 @@
 ### 3.1.1rc: 2025-01-09
 
-* Merge changes from revision 3219756 of advanced-media-offloader, svn trunk version 3.0.0 (prefixed with Upstream)
+* Merge changes from revision 3219756 of advanced-media-offloader, svn trunk version 3.0.0 (prefixed with Upstream), Fixes #1
 * Format changes with PHPCBF
+* Exclude vendor directory from PHPCS checks
+* Simplify composer.json and remove scoper, there is no need for it since WordPress's plugin architecture naturally isolates plugins, AWS SDK uses its own namespaces (Aws\) which are unlikely to conflict
+* Make build work in both dev and production without having to manually run separate composer commands
 * Upstream: Introduce a new user interface (UI) and improved user experience (UX) for the settings page.
 * Upstream: Add functionality to offload and sync edited images with cloud storage
 * Upstream: Improve bulk offloading to cloud storage by fixing various bugs

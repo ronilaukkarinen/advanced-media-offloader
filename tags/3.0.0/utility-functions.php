@@ -1,6 +1,6 @@
 <?php
-if (!defined('ABSPATH')) {
-	die('No direct script access allowed');
+if ( ! defined( 'ABSPATH' ) ) {
+	die( 'No direct script access allowed' );
 }
 
 /**
@@ -9,10 +9,9 @@ if (!defined('ABSPATH')) {
  * @param string $file The file path relative to the plugin directory.
  * @return void
  */
-if (!function_exists('advmo_get_view')) {
-	function advmo_get_view(string $template)
-	{
-		if (file_exists(ADVMO_PATH . 'templates/' . $template . '.php')) {
+if ( ! function_exists( 'advmo_get_view' ) ) {
+	function advmo_get_view( string $template ) {
+		if ( file_exists( ADVMO_PATH . 'templates/' . $template . '.php' ) ) {
 			include ADVMO_PATH . 'templates/' . $template . '.php';
 		}
 	}
@@ -25,12 +24,11 @@ if (!function_exists('advmo_get_view')) {
  * @param mixed $default The default value if the option is not set.
  * @return mixed The option value or default.
  */
-if (!function_exists('advmo_get_option')) {
-	function advmo_get_option(string $option, $default = '')
-	{
-		$options = get_option('advmo_options');
-		if (is_array($options) && isset($options[$option])) {
-			return $options[$option];
+if ( ! function_exists( 'advmo_get_option' ) ) {
+	function advmo_get_option( string $option, $default = '' ) {
+		$options = get_option( 'advmo_options' );
+		if ( is_array( $options ) && isset( $options[ $option ] ) ) {
+			return $options[ $option ];
 		}
 		return $default;
 	}
@@ -43,15 +41,14 @@ if (!function_exists('advmo_get_option')) {
  * @param mixed $value The new value for the option.
  * @return void
  */
-if (!function_exists('advmo_update_option')) {
-	function advmo_update_option(string $option, $value): void
-	{
-		$options = get_option('advmo_options');
-		if (!is_array($options)) {
+if ( ! function_exists( 'advmo_update_option' ) ) {
+	function advmo_update_option( string $option, $value ): void {
+		$options = get_option( 'advmo_options' );
+		if ( ! is_array( $options ) ) {
 			$options = [];
 		}
-		$options[$option] = $value;
-		update_option('advmo_options', $options);
+		$options[ $option ] = $value;
+		update_option( 'advmo_options', $options );
 	}
 }
 
@@ -62,14 +59,13 @@ if (!function_exists('advmo_update_option')) {
  * @return void
  */
 
-if (!function_exists('advmo_delete_opion')) {
-	function advmo_delete_option(string $option): void
-	{
-		$options = get_option('advmo_options');
-		if (is_array($options) && isset($options[$option])) {
-			unset($options[$option]);
+if ( ! function_exists( 'advmo_delete_opion' ) ) {
+	function advmo_delete_option( string $option ): void {
+		$options = get_option( 'advmo_options' );
+		if ( is_array( $options ) && isset( $options[ $option ] ) ) {
+			unset( $options[ $option ] );
 		}
-		update_option('advmo_options', $options);
+		update_option( 'advmo_options', $options );
 	}
 }
 
@@ -80,25 +76,23 @@ if (!function_exists('advmo_delete_opion')) {
  * @param bool $die Whether to die after dumping.
  * @return void
  */
-if (!function_exists('advmo_vd')) {
-	function advmo_vd($var, bool $die = false): void
-	{
+if ( ! function_exists( 'advmo_vd' ) ) {
+	function advmo_vd( $var, bool $die = false ): void {
 		echo '<pre style="direction: ltr">';
-		var_dump($var);
+		var_dump( $var );
 		echo '</pre>';
-		if ($die) {
+		if ( $die ) {
 			die();
 		}
 	}
 }
 
 
-if (!function_exists('advmo_is_settings_page')) {
-	function advmo_is_settings_page($page_name = ''): bool
-	{
+if ( ! function_exists( 'advmo_is_settings_page' ) ) {
+	function advmo_is_settings_page( $page_name = '' ): bool {
 		$current_screen = get_current_screen();
 
-		if (!$current_screen) {
+		if ( ! $current_screen ) {
 			return false;
 		}
 
@@ -107,11 +101,11 @@ if (!function_exists('advmo_is_settings_page')) {
 
 		$plugin_pages = [
 			$ADVMO_GENERAL_PAGE,    // Main settings page
-			$ADVMO_MEDIA_OVERVIEW_PAGE  // Submenu page
+			$ADVMO_MEDIA_OVERVIEW_PAGE,  // Submenu page
 		];
 
-		if (!empty($page_name)) {
-			switch ($page_name) {
+		if ( ! empty( $page_name ) ) {
+			switch ( $page_name ) {
 				case 'general':
 					return $current_screen->id === $ADVMO_GENERAL_PAGE;
 				case 'media-overview':
@@ -121,7 +115,7 @@ if (!function_exists('advmo_is_settings_page')) {
 			}
 		}
 
-		return in_array($current_screen->id, $plugin_pages);
+		return in_array( $current_screen->id, $plugin_pages );
 	}
 }
 
@@ -136,15 +130,14 @@ if (!function_exists('advmo_is_settings_page')) {
  *
  * @return string
  */
-if (!function_exists('advmo_get_copyright_text')) {
-	function advmo_get_copyright_text(): string
-	{
-		$year = date('Y');
+if ( ! function_exists( 'advmo_get_copyright_text' ) ) {
+	function advmo_get_copyright_text(): string {
+		$year = date( 'Y' );
 		$site_url = 'https://wpfitter.com/?utm_source=wp-plugin&utm_medium=plugin&utm_campaign=advanced-media-offloader';
 
 		return sprintf(
 			'Advanced Media Offloader plugin developed by <a href="%s" target="_blank">WPFitter</a>. ',
-			esc_url($site_url)
+			esc_url( $site_url )
 		);
 	}
 }
@@ -154,9 +147,8 @@ if (!function_exists('advmo_get_copyright_text')) {
  *
  * @return array The bulk offload data.
  */
-if (!function_exists('advmo_get_bulk_offload_data')) {
-	function advmo_get_bulk_offload_data(): array
-	{
+if ( ! function_exists( 'advmo_get_bulk_offload_data' ) ) {
+	function advmo_get_bulk_offload_data(): array {
 		$defaults = array(
 			'total' => 0,
 			'status' => '',
@@ -164,9 +156,9 @@ if (!function_exists('advmo_get_bulk_offload_data')) {
 			'errors' => 0,
 		);
 
-		$stored_data = get_option('advmo_bulk_offload_data', array());
+		$stored_data = get_option( 'advmo_bulk_offload_data', array() );
 
-		return array_merge($defaults, $stored_data);
+		return array_merge( $defaults, $stored_data );
 	}
 }
 
@@ -176,26 +168,25 @@ if (!function_exists('advmo_get_bulk_offload_data')) {
  * @param array $new_data The new data to update.
  * @return array The updated bulk offload data.
  */
-if (!function_exists('advmo_update_bulk_offload_data')) {
-	function advmo_update_bulk_offload_data(array $new_data): array
-	{
+if ( ! function_exists( 'advmo_update_bulk_offload_data' ) ) {
+	function advmo_update_bulk_offload_data( array $new_data ): array {
 		// Define the allowed keys
-		$allowed_keys = array('total', 'status', 'processed', 'errors');
+		$allowed_keys = array( 'total', 'status', 'processed', 'errors' );
 
 		// Filter the new data to only include allowed keys
-		$filtered_new_data = array_intersect_key($new_data, array_flip($allowed_keys));
+		$filtered_new_data = array_intersect_key( $new_data, array_flip( $allowed_keys ) );
 
 		// Get the existing data
 		$existing_data = advmo_get_bulk_offload_data();
 
 		// Merge the filtered new data with the existing data
-		$updated_data = array_merge($existing_data, $filtered_new_data);
+		$updated_data = array_merge( $existing_data, $filtered_new_data );
 
 		// Ensure only allowed keys are in the final data set
-		$final_data = array_intersect_key($updated_data, array_flip($allowed_keys));
+		$final_data = array_intersect_key( $updated_data, array_flip( $allowed_keys ) );
 
 		// Update the option in the database
-		update_option('advmo_bulk_offload_data', $final_data);
+		update_option( 'advmo_bulk_offload_data', $final_data );
 
 		return $final_data;
 	}
@@ -206,10 +197,9 @@ if (!function_exists('advmo_update_bulk_offload_data')) {
  *
  * @return bool True if media is organized by year and month, false otherwise.
  */
-if (!function_exists('advmo_is_media_organized_by_year_month')) {
-	function advmo_is_media_organized_by_year_month(): bool
-	{
-		return get_option('uploads_use_yearmonth_folders') ? true : false;
+if ( ! function_exists( 'advmo_is_media_organized_by_year_month' ) ) {
+	function advmo_is_media_organized_by_year_month(): bool {
+		return get_option( 'uploads_use_yearmonth_folders' ) ? true : false;
 	}
 }
 
@@ -219,26 +209,25 @@ if (!function_exists('advmo_is_media_organized_by_year_month')) {
  * @param string $path The path to sanitize.
  * @return string The sanitized path.
  */
-if (!function_exists('advmo_sanitize_path')) {
-	function advmo_sanitize_path(string $path): string
-	{
+if ( ! function_exists( 'advmo_sanitize_path' ) ) {
+	function advmo_sanitize_path( string $path ): string {
 		// Remove leading and trailing whitespace
-		$path = trim($path);
+		$path = trim( $path );
 
 		// Remove or encode potentially harmful characters
-		$path = wp_sanitize_redirect($path);
+		$path = wp_sanitize_redirect( $path );
 
 		// Convert to lowercase for consistency (optional, depending on your needs)
-		$path = strtolower($path);
+		$path = strtolower( $path );
 
 		// Remove any directory traversal attempts
-		$path = str_replace(['../', './'], '', $path);
+		$path = str_replace( [ '../', './' ], '', $path );
 
 		// Normalize slashes and remove duplicate slashes
-		$path = preg_replace('#/+#', '/', $path);
+		$path = preg_replace( '#/+#', '/', $path );
 
 		// Remove leading and trailing slashes
-		$path = trim($path, '/');
+		$path = trim( $path, '/' );
 
 		// Optionally, you can use wp_normalize_path() if you want to ensure consistent directory separators
 		// $path = wp_normalize_path($path);
@@ -252,10 +241,9 @@ if (!function_exists('advmo_sanitize_path')) {
  *
  * @return void
  */
-if (!function_exists('advmo_clear_bulk_offload_data')) {
-	function advmo_clear_bulk_offload_data(): void
-	{
-		delete_option('advmo_bulk_offload_data');
+if ( ! function_exists( 'advmo_clear_bulk_offload_data' ) ) {
+	function advmo_clear_bulk_offload_data(): void {
+		delete_option( 'advmo_bulk_offload_data' );
 	}
 }
 
@@ -264,10 +252,9 @@ if (!function_exists('advmo_clear_bulk_offload_data')) {
  *
  * @return string The cloud provider key.
  */
-if (!function_exists('advmo_get_cloud_provider_key')) {
-	function advmo_get_cloud_provider_key(): string
-	{
-		$options = get_option('advmo_settings', []);
+if ( ! function_exists( 'advmo_get_cloud_provider_key' ) ) {
+	function advmo_get_cloud_provider_key(): string {
+		$options = get_option( 'advmo_settings', [] );
 		return $options['cloud_provider'] ?? '';
 	}
 }
@@ -277,9 +264,8 @@ if (!function_exists('advmo_get_cloud_provider_key')) {
  *
  * @return int The count of unoffloaded media items.
  */
-if (!function_exists('advmo_get_unoffloaded_media_items_count')) {
-	function advmo_get_unoffloaded_media_items_count(): int
-	{
+if ( ! function_exists( 'advmo_get_unoffloaded_media_items_count' ) ) {
+	function advmo_get_unoffloaded_media_items_count(): int {
 		$args = [
 			'fields' => 'ids',
 			'numberposts' => -1,
@@ -289,23 +275,22 @@ if (!function_exists('advmo_get_unoffloaded_media_items_count')) {
 				'relation' => 'OR',
 				[
 					'key' => 'advmo_offloaded',
-					'compare' => 'NOT EXISTS'
+					'compare' => 'NOT EXISTS',
 				],
 				[
 					'key' => 'advmo_offloaded',
 					'compare' => '=',
-					'value' => ''
-				]
-			]
+					'value' => '',
+				],
+			],
 		];
-		$attachments = get_posts($args);
-		return count($attachments);
+		$attachments = get_posts( $args );
+		return count( $attachments );
 	}
 }
 
-if (!function_exists('advmo_get_offloaded_media_items_count')) {
-	function advmo_get_offloaded_media_items_count()
-	{
+if ( ! function_exists( 'advmo_get_offloaded_media_items_count' ) ) {
+	function advmo_get_offloaded_media_items_count() {
 		$args = [
 			'fields' => 'ids',
 			'numberposts' => -1,
@@ -315,16 +300,16 @@ if (!function_exists('advmo_get_offloaded_media_items_count')) {
 				'relation' => 'OR',
 				[
 					'key' => 'advmo_offloaded',
-					'compare' => 'EXISTS'
+					'compare' => 'EXISTS',
 				],
 				[
 					'key' => 'advmo_offloaded',
 					'compare' => '!=',
-					'value' => ''
-				]
-			]
+					'value' => '',
+				],
+			],
 		];
-		$attachments = get_posts($args);
-		return count($attachments);
+		$attachments = get_posts( $args );
+		return count( $attachments );
 	}
 }

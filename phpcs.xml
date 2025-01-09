@@ -20,9 +20,10 @@
      <arg name="extensions" value="php,css,scss/css"/>
 
      <!-- Check all files in this directory and the directories below it. -->
-     <file>.</file>
+    <file>.</file>
+    <exclude-pattern>/vendor/*</exclude-pattern>
 
-     <!-- Include the WordPress ruleset, with exclusions. -->
+    <!-- Include the WordPress ruleset, with exclusions. -->
      <rule ref="WordPress">
 
         <!-- Strict intendation rules we want to exclude -->

@@ -10,7 +10,8 @@
     }
   },
   "require": {
-    "aws/aws-sdk-php": "^3.331.0"
+    "aws/aws-sdk-php": "^3.336",
+    "php": "^8.3"
   },
   "extra": {
     "aws/aws-sdk-php": [
@@ -19,27 +20,12 @@
   },
   "scripts": {
     "package": [
-      "composer scope-release",
-      "cd .. && zip -r advanced-media-offloader.zip advanced-media-offloader -x 'advanced-media-offloader/.git/*' -x 'advanced-media-offloader/.gitignore' -x 'advanced-media-offloader/.github/*' -x 'advanced-media-offloader/composer.lock' -x 'advanced-media-offloader/*.md' -x 'advanced-media-offloader/.phpcs.xml' -x 'advanced-media-offloader/.editorconfig' -x 'advanced-media-offloader/scoper.inc.php'"
+      "composer install --no-dev --optimize-autoloader --prefer-dist",
+      "cd .. && zip -r advanced-media-offloader.zip advanced-media-offloader -x 'advanced-media-offloader/.git/*' -x 'advanced-media-offloader/.gitignore' -x 'advanced-media-offloader/.github/*' -x 'advanced-media-offloader/composer.lock' -x 'advanced-media-offloader/*.md' -x 'advanced-media-offloader/.phpcs.xml' -x 'advanced-media-offloader/.editorconfig'"
     ],
     "pre-autoload-dump": "Aws\\Script\\Composer\\Composer::removeUnusedServices",
-    "scope-release": [
-      "rm -rf vendor",
-      "composer install --no-dev --optimize-autoloader --prefer-dist",
-      "~/.composer/vendor/bin/php-scoper add-prefix",
-      "rm -rf vendor",
-      "mv build/vendor vendor",
-      "rm -rf build",
-      "composer dump-autoload --classmap-authoritative"
-    ],
-    "scope-dev": [
-      "rm -rf vendor",
-      "composer install",
-      "~/.composer/vendor/bin/php-scoper add-prefix",
-      "rm -rf vendor",
-      "mv build/vendor vendor",
-      "rm -rf build",
-      "composer dump-autoload --classmap-authoritative"
+    "install-scripts": [
+      "composer dump-autoload"
     ]
   },
   "require-dev": {
@@ -54,6 +40,12 @@
   "config": {
     "allow-plugins": {
       "dealerdirect/phpcodesniffer-composer-installer": true
+    },
+    "optimize-autoloader": true,
+    "preferred-install": "dist",
+    "sort-packages": true,
+    "platform": {
+      "php": "8.3"
     }
   }
 }

@@ -3,7 +3,7 @@
   * Plugin Name:       Advanced Media Offloader + WP-CLI
   * Plugin URI:        https://github.com/ronilaukkarinen/advanced-media-offloader
   * Description:       Offload WordPress media to Amazon S3, DigitalOcean Spaces, Min.io or Cloudflare R2. A fork with WP-CLI support, <code>wp advmo offload</code>.
-  * Version:           3.1.1
+  * Version:           3.1.1rc
   * Requires at least: 5.6
   * Tested up to:      6.7.1
   * Requires PHP:      8.1
@@ -133,7 +133,7 @@ if ( ! class_exists( 'ADVMO' ) ) {
 			include_once ADVMO_PATH . 'utility-functions.php';
 
 			// check if AWS SDK is loaded
-			if ( ! class_exists( WPFitter\Aws\S3\S3Client::class ) ) {
+			if ( ! class_exists( 'Aws\\S3\\S3Client' ) ) {
 				// Show admin notice if AWS SDK is missing.
 				add_action('admin_notices', function () {
 					$this->notice( __( 'AWS SDK for PHP is required to use Advanced Media Offloader. Please install it via Composer.', 'advanced-media-offloader' ), 'error' );
@@ -206,7 +206,7 @@ if ( ! class_exists( 'ADVMO' ) ) {
 		}
 	}
 
-	function advmo() {
+	function advmo() { // phpcs:ignore Universal.Files.SeparateFunctionsFromOO.Mixed
 		global $advmo;
 
 		// Instantiate only once.
@@ -220,3 +220,7 @@ if ( ! class_exists( 'ADVMO' ) ) {
 	// Instantiate.
 	advmo();
 } // class_exists check
+
+if ( ! function_exists( 'Aws\\constantly' ) ) {
+  require_once __DIR__ . '/vendor/aws/aws-sdk-php/src/functions.php';
+}

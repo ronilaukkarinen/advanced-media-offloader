@@ -9,8 +9,8 @@ use Advanced_Media_Offloader\Integrations\MinIO;
 use Advanced_Media_Offloader\Abstracts\S3_Provider;
 use Exception;
 
-class CloudProviderFactory
-{
+class CloudProviderFactory {
+
     /**
      * List of available cloud providers.
      *
@@ -42,16 +42,15 @@ class CloudProviderFactory
      * @return S3_Provider An instance of the cloud provider class.
      * @throws Exception If the provider key is unsupported.
      */
-    public static function create(string $provider_key): S3_Provider
-    {
-        if (!isset(self::$cloud_providers[$provider_key])) {
-            throw new Exception("Unsupported cloud provider: {$provider_key}");
+    public static function create( string $provider_key ): S3_Provider {
+        if ( ! isset( self::$cloud_providers[ $provider_key ] ) ) {
+            throw new Exception( "Unsupported cloud provider: {$provider_key}" );
         }
 
-        $provider_class = self::$cloud_providers[$provider_key]['class'];
+        $provider_class = self::$cloud_providers[ $provider_key ]['class'];
 
-        if (!class_exists($provider_class)) {
-            throw new Exception("Cloud provider class does not exist: {$provider_class}");
+        if ( ! class_exists( $provider_class ) ) {
+            throw new Exception( "Cloud provider class does not exist: {$provider_class}" );
         }
 
         return new $provider_class();
@@ -62,8 +61,7 @@ class CloudProviderFactory
      *
      * @return array The list of cloud providers with keys and names.
      */
-    public static function getAvailableProviders(): array
-    {
+    public static function getAvailableProviders(): array {
         return self::$cloud_providers;
     }
 }

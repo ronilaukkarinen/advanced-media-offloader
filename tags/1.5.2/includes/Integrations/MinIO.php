@@ -3,48 +3,42 @@
 namespace Advanced_Media_Offloader\Integrations;
 
 use Advanced_Media_Offloader\Abstracts\S3_Provider;
-use \Aws\S3\S3Client;
+use Aws\S3\S3Client;
 
-class MinIO extends S3_Provider
-{
-    public $providerName = "MinIO";
+class MinIO extends S3_Provider {
 
-    public function __construct()
-    {
+    public $providerName = 'MinIO';
+
+    public function __construct() {
         // Do nothing.
     }
 
-    public function getProviderName()
-    {
+    public function getProviderName() {
         return $this->providerName;
     }
 
-    public function getClient()
-    {
+    public function getClient() {
         return new S3Client([
             'version' => 'latest',
-            'endpoint' => defined("ADVMO_MINIO_ENDPOINT") ? ADVMO_MINIO_ENDPOINT : '',
-            'region' => defined("ADVMO_MINIO_REGION") ? ADVMO_MINIO_REGION : 'us-east-1',
+            'endpoint' => defined( 'ADVMO_MINIO_ENDPOINT' ) ? ADVMO_MINIO_ENDPOINT : '',
+            'region' => defined( 'ADVMO_MINIO_REGION' ) ? ADVMO_MINIO_REGION : 'us-east-1',
             'credentials' => [
-                'key' => defined("ADVMO_MINIO_KEY") ? ADVMO_MINIO_KEY : '',
-                'secret' => defined("ADVMO_MINIO_SECRET") ? ADVMO_MINIO_SECRET : '',
+                'key' => defined( 'ADVMO_MINIO_KEY' ) ? ADVMO_MINIO_KEY : '',
+                'secret' => defined( 'ADVMO_MINIO_SECRET' ) ? ADVMO_MINIO_SECRET : '',
             ],
-            'retries' => 1
+            'retries' => 1,
         ]);
     }
 
-    public function getBucket()
-    {
-        return defined("ADVMO_MINIO_BUCKET") ? ADVMO_MINIO_BUCKET : null;
+    public function getBucket() {
+        return defined( 'ADVMO_MINIO_BUCKET' ) ? ADVMO_MINIO_BUCKET : null;
     }
 
-    public function getDomain()
-    {
-        return defined('ADVMO_MINIO_DOMAIN') ? trailingslashit(ADVMO_MINIO_DOMAIN) . trailingslashit(ADVMO_MINIO_BUCKET) : '';
+    public function getDomain() {
+        return defined( 'ADVMO_MINIO_DOMAIN' ) ? trailingslashit( ADVMO_MINIO_DOMAIN ) . trailingslashit( ADVMO_MINIO_BUCKET ) : '';
     }
 
-    public function credentialsField()
-    {
+    public function credentialsField() {
         $requiredConstants = [
             'ADVMO_MINIO_KEY' => 'Your MinIO Access Key',
             'ADVMO_MINIO_SECRET' => 'Your MinIO Secret Key',
@@ -53,6 +47,6 @@ class MinIO extends S3_Provider
             'ADVMO_MINIO_DOMAIN' => 'Your Custom Domain',
         ];
 
-        echo $this->getCredentialsFieldHTML($requiredConstants);
+        echo $this->getCredentialsFieldHTML( $requiredConstants );
     }
 }

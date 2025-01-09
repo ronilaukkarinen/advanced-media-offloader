@@ -1,6 +1,5 @@
 <?php
-
-namespace WPFitter\JmesPath;
+namespace JmesPath;
 
 /**
  * Returns data from the input array that matches a JMESPath expression.
@@ -10,8 +9,7 @@ namespace WPFitter\JmesPath;
  *
  * @return mixed
  */
-if (!\function_exists(__NAMESPACE__ . '\\search')) {
-    /** @internal */
+if (!function_exists(__NAMESPACE__ . '\search')) {
     function search($expression, $data)
     {
         return Env::search($expression, $data);

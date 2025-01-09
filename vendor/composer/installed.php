@@ -1,8 +1,8 @@
 <?php return array(
     'root' => array(
         'name' => 'ronilaukkarinen/advanced-media-offloader',
-        'pretty_version' => '3.1.0',
-        'version' => '3.1.0.0',
+        'pretty_version' => '3.1.1',
+        'version' => '3.1.1.0',
         'reference' => NULL,
         'type' => 'wordpress-plugin',
         'install_path' => __DIR__ . '/../../',
@@ -176,8 +176,8 @@
             'dev_requirement' => false,
         ),
         'ronilaukkarinen/advanced-media-offloader' => array(
-            'pretty_version' => '3.1.0',
-            'version' => '3.1.0.0',
+            'pretty_version' => '3.1.1',
+            'version' => '3.1.1.0',
             'reference' => NULL,
             'type' => 'wordpress-plugin',
             'install_path' => __DIR__ . '/../../',

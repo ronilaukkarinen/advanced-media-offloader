@@ -31,3 +31,16 @@ wp advmo offload [--batch <number>] [--dry-run] [--verbose] [--all] [--yes]
 3. Once installed, click "Activate" to enable the plugin.
 4. After activation, go to "Media Offloader" in the WordPress dashboard to access the plugin settings.
 5. To configure the plugin, you need to add your S3-compatible cloud storage credentials to your wp-config.php file using constants.
+
+## Contributing
+
+1. Clone the repository.
+2. Run
+
+```bash
+# First clean up
+rm -rf vendor composer.lock build
+
+# Install dependencies
+composer install
+```

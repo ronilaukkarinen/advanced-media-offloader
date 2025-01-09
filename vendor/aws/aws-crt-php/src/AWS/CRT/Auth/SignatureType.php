@@ -1,14 +1,11 @@
 <?php
-
 /**
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0.
  */
-namespace WPFitter\AWS\CRT\Auth;
+namespace AWS\CRT\Auth;
 
-/** @internal */
-class SignatureType
-{
+class SignatureType {
     const HTTP_REQUEST_HEADERS = 0;
     const HTTP_REQUEST_QUERY_PARAMS = 1;
     const HTTP_REQUEST_CHUNK = 2;

@@ -2,8 +2,8 @@
 
 namespace Advanced_Media_Offloader\Interfaces;
 
-interface ObserverInterface
-{
+interface ObserverInterface {
+
     /**
      * Register the observer with WordPress hooks.
      *

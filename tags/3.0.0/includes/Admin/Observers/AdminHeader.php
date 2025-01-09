@@ -4,46 +4,41 @@ namespace Advanced_Media_Offloader\Admin\Observers;
 
 use Advanced_Media_Offloader\Interfaces\ObserverInterface;
 
-class AdminHeader implements ObserverInterface
-{
+class AdminHeader implements ObserverInterface {
+
     private static $instance = null;
 
-    private function __construct()
-    {
+    private function __construct() {
         $this->register();
     }
 
-    public static function getInstance(): self
-    {
-        if (self::$instance === null) {
+    public static function getInstance(): self {
+        if ( self::$instance === null ) {
             self::$instance = new self();
         }
 
         return self::$instance;
     }
 
-    public function register(): void
-    {
-        add_action('in_admin_header', [$this, 'run']);
+    public function register(): void {
+        add_action( 'in_admin_header', [ $this, 'run' ] );
     }
 
-    public function run()
-    {
+    public function run() {
 
         $this->disable_admin_notices();
-        advmo_get_view('admin/header');
+        advmo_get_view( 'admin/header' );
     }
 
     /**
      * Disable admin notices from other plugins
      */
-    protected function disable_admin_notices()
-    {
+    protected function disable_admin_notices() {
         $screen = get_current_screen();
 
-        if ($screen->id === 'toplevel_page_advmo') {
-            remove_all_actions('user_admin_notices');
-            remove_all_actions('admin_notices');
+        if ( $screen->id === 'toplevel_page_advmo' ) {
+            remove_all_actions( 'user_admin_notices' );
+            remove_all_actions( 'admin_notices' );
         }
     }
 

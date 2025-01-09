@@ -31,5 +31,5 @@
         </a>
     </div>
 
-    <?php advmo_get_view('admin/navmenu'); ?>
+    <?php advmo_get_view( 'admin/navmenu' ); ?>
 </div>

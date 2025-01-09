@@ -2,8 +2,8 @@
 
 namespace Advanced_Media_Offloader\Abstracts;
 
-abstract class S3_Provider
-{
+abstract class S3_Provider {
+
 
 	protected $s3Client;
 
@@ -27,12 +27,11 @@ abstract class S3_Provider
 	 * @param array $constants Associative array of constant names and messages.
 	 * @return array Associative array of missing constants and their messages.
 	 */
-	protected function checkRequiredConstants(array $constants)
-	{
+	protected function checkRequiredConstants( array $constants ) {
 		$missingConstants = [];
-		foreach ($constants as $constant => $message) {
-			if (!defined($constant)) {
-				$missingConstants[$constant] = $message;
+		foreach ( $constants as $constant => $message ) {
+			if ( ! defined( $constant ) ) {
+				$missingConstants[ $constant ] = $message;
 			}
 		}
 		return $missingConstants;
@@ -52,8 +51,7 @@ abstract class S3_Provider
 	 * @param string $bucket The bucket to upload the file to.
 	 * @return string URL of the uploaded object.
 	 */
-	public function uploadFile($file, $key)
-	{
+	public function uploadFile( $file, $key ) {
 		$client = $this->getClient();
 		try {
 			$result = $client->putObject([
@@ -62,9 +60,9 @@ abstract class S3_Provider
 				'SourceFile' => $file,
 				'ACL' => 'public-read',
 			]);
-			return $client->getObjectUrl($this->getBucket(), $key);
-		} catch (\Exception $e) {
-			error_log("Advanced Media Offloader: Error uploading file to S3: {$e->getMessage()}");
+			return $client->getObjectUrl( $this->getBucket(), $key );
+		} catch ( \Exception $e ) {
+			error_log( "Advanced Media Offloader: Error uploading file to S3: {$e->getMessage()}" );
 			return false;
 		}
 	}
@@ -74,11 +72,10 @@ abstract class S3_Provider
 	 *
 	 * @return mixed
 	 */
-	public function checkConnection()
-	{
+	public function checkConnection() {
 		$client = $this->getClient();
 		try {
-			# get bucket info
+			// get bucket info
 			$result = $client->headBucket([
 				'Bucket' => $this->getBucket(),
 				'@http'  => [
@@ -86,45 +83,42 @@ abstract class S3_Provider
 				],
 			]);
 			return true;
-		} catch (\Exception $e) {
-			error_log("Advanced Media Offloader: Error checking connection to S3: {$e->getMessage()}");
+		} catch ( \Exception $e ) {
+			error_log( "Advanced Media Offloader: Error checking connection to S3: {$e->getMessage()}" );
 			return false;
 		}
 	}
 
-	public function TestConnectionHTMLButton()
-	{
+	public function TestConnectionHTMLButton() {
 		$html = '<div class="advmo-test-connection-container">';
-		$html .= '<button class="button advmo_js_test_connection">' . esc_html__('Test Connection', 'advanced-media-offloader') . '</button>';
+		$html .= '<button class="button advmo_js_test_connection">' . esc_html__( 'Test Connection', 'advanced-media-offloader' ) . '</button>';
 		$html .= '<div class="advmo-test-connection-result">';
-		$html .= '<p class="advmo-test-success" style="display: none;"><span class="dashicons dashicons-yes-alt"></span> ' . esc_html__('Connection successful!', 'advanced-media-offloader') . '</p>';
-		$html .= '<p class="advmo-test-error" style="display: none;"><span class="dashicons dashicons-warning"></span> <span class="advmo-error-message"></span> ' . esc_html__('Connection Failed!', 'advanced-media-offloader') . '</p>';
+		$html .= '<p class="advmo-test-success" style="display: none;"><span class="dashicons dashicons-yes-alt"></span> ' . esc_html__( 'Connection successful!', 'advanced-media-offloader' ) . '</p>';
+		$html .= '<p class="advmo-test-error" style="display: none;"><span class="dashicons dashicons-warning"></span> <span class="advmo-error-message"></span> ' . esc_html__( 'Connection Failed!', 'advanced-media-offloader' ) . '</p>';
 		$html .= '</div>'; // Close advmo-test-connection-result
 		$html .= '</div>'; // Close advmo-test-connection-container
 
 		return $html;
 	}
-	private function getConstantCodes($missingConstants)
-	{
+	private function getConstantCodes( $missingConstants ) {
 		$html = '';
-		foreach ($missingConstants as $constant => $message) {
-			$html .= 'define(' . esc_html($constant) . ', \'' . esc_html(sanitize_title($message)) . '\');' . "\n";
+		foreach ( $missingConstants as $constant => $message ) {
+			$html .= 'define(' . esc_html( $constant ) . ', \'' . esc_html( sanitize_title( $message ) ) . '\');' . "\n";
 		}
 		return $html;
 	}
 
-	public function getCredentialsFieldHTML($requiredConstants)
-	{
-		$missingConstants = $this->checkRequiredConstants($requiredConstants);
+	public function getCredentialsFieldHTML( $requiredConstants ) {
+		$missingConstants = $this->checkRequiredConstants( $requiredConstants );
 		$html = '<div class="advmo-credentials-container">';
-		if (!empty($missingConstants)) {
-			$section_title = esc_html__('Missing Credentials Setup', 'advanced-media-offloader');
-			$section_description = sprintf(esc_html__('To enable cloud storage integration, you need to define the following constants in your %s file. Make sure to replace the placeholders with your actual credentials.', 'advanced-media-offloader'), '<code>wp-config.php</code>');
-			$constantsCode = $this->getConstantCodes($missingConstants);
+		if ( ! empty( $missingConstants ) ) {
+			$section_title = esc_html__( 'Missing Credentials Setup', 'advanced-media-offloader' );
+			$section_description = sprintf( esc_html__( 'To enable cloud storage integration, you need to define the following constants in your %s file. Make sure to replace the placeholders with your actual credentials.', 'advanced-media-offloader' ), '<code>wp-config.php</code>' );
+			$constantsCode = $this->getConstantCodes( $missingConstants );
 			$security_note = sprintf(
-				"%s We recommend using the %s file for enhanced security. This ensures your sensitive credentials are not exposed within the WordPress admin interface.",
-				"<strong>Note:</strong>",
-				"<code>wp-config.php</code>"
+				'%s We recommend using the %s file for enhanced security. This ensures your sensitive credentials are not exposed within the WordPress admin interface.',
+				'<strong>Note:</strong>',
+				'<code>wp-config.php</code>'
 			);
 			$html .= <<<HTML
 				<div class="advmo-missing-constants">{$html}
@@ -135,8 +129,8 @@ abstract class S3_Provider
 				</div>
 			HTML;
 		} else {
-			$credentials_are_set = sprintf(esc_html__('%s credentials are set in wp-config.php', 'advanced-media-offloader'), $this->getProviderName());
-			$bucket_name = sprintf(esc_html__('Bucket: %s', 'advanced-media-offloader'), $this->getBucket());
+			$credentials_are_set = sprintf( esc_html__( '%s credentials are set in wp-config.php', 'advanced-media-offloader' ), $this->getProviderName() );
+			$bucket_name = sprintf( esc_html__( 'Bucket: %s', 'advanced-media-offloader' ), $this->getBucket() );
 			$test_connection_button = $this->TestConnectionHTMLButton();
 			$html .= <<<HTML
 					<div class="advmo-credentials-set">
@@ -158,23 +152,22 @@ abstract class S3_Provider
 	 * @param int $attachment_id The WordPress attachment ID.
 	 * @return bool True on success, false on failure.
 	 */
-	public function deleteFile($attachment_id)
-	{
+	public function deleteFile( $attachment_id ) {
 		$client = $this->getClient();
 		$bucket = $this->getBucket();
 
 		// Get the S3 key for the attachment
-		$attached_file = get_post_meta($attachment_id, '_wp_attached_file', true);
+		$attached_file = get_post_meta( $attachment_id, '_wp_attached_file', true );
 
-		$advmo_path = get_post_meta($attachment_id, 'advmo_path', true);
+		$advmo_path = get_post_meta( $attachment_id, 'advmo_path', true );
 
-		if (!$attached_file || !$advmo_path) {
-			error_log("Advanced Media Offloader: Error deleting file from S3: Unable to find S3 key for attachment ID {$attachment_id}");
+		if ( ! $attached_file || ! $advmo_path ) {
+			error_log( "Advanced Media Offloader: Error deleting file from S3: Unable to find S3 key for attachment ID {$attachment_id}" );
 			return false;
 		}
 
-		$file_name = basename($attached_file);
-		$key = trailingslashit($advmo_path) .  $file_name;
+		$file_name = basename( $attached_file );
+		$key = trailingslashit( $advmo_path ) . $file_name;
 
 		try {
 			// Delete the main file
@@ -184,11 +177,11 @@ abstract class S3_Provider
 			]);
 
 			// Check if there are any thumbnails to delete
-			$metadata = wp_get_attachment_metadata($attachment_id);
-			if (isset($metadata['sizes']) && is_array($metadata['sizes'])) {
-				$base_dir = trailingslashit(dirname($key));
+			$metadata = wp_get_attachment_metadata( $attachment_id );
+			if ( isset( $metadata['sizes'] ) && is_array( $metadata['sizes'] ) ) {
+				$base_dir = trailingslashit( dirname( $key ) );
 
-				foreach ($metadata['sizes'] as $size => $sizeinfo) {
+				foreach ( $metadata['sizes'] as $size => $sizeinfo ) {
 					$thumbnail_key = $base_dir . $sizeinfo['file'];
 					$client->deleteObject([
 						'Bucket' => $bucket,
@@ -197,8 +190,8 @@ abstract class S3_Provider
 				}
 			}
 			return true;
-		} catch (\Exception $e) {
-			error_log("Advanced Media Offloader: Error deleting file from S3: {$e->getMessage()}");
+		} catch ( \Exception $e ) {
+			error_log( "Advanced Media Offloader: Error deleting file from S3: {$e->getMessage()}" );
 			return false;
 		}
 	}

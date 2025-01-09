@@ -1,10 +1,10 @@
 <?php
 
-namespace WPFitter\Psr\Http\Client;
+namespace Psr\Http\Client;
 
-use WPFitter\Psr\Http\Message\RequestInterface;
-use WPFitter\Psr\Http\Message\ResponseInterface;
-/** @internal */
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
+
 interface ClientInterface
 {
     /**
@@ -16,5 +16,5 @@ interface ClientInterface
      *
      * @throws \Psr\Http\Client\ClientExceptionInterface If an error happens while processing the request.
      */
-    public function sendRequest(RequestInterface $request) : ResponseInterface;
+    public function sendRequest(RequestInterface $request): ResponseInterface;
 }

@@ -1,6 +1,5 @@
 <?php
-
-namespace WPFitter\JmesPath;
+namespace JmesPath;
 
 /**
  * Compiles JMESPath expressions to PHP source code and executes it.
@@ -11,7 +10,6 @@ namespace WPFitter\JmesPath;
  * 1. Start with the string "jmespath_"
  * 2. Append the MD5 checksum of the expression.
  * 3. Append ".php"
- * @internal
  */
 class CompilerRuntime
 {
@@ -19,6 +17,7 @@ class CompilerRuntime
     private $compiler;
     private $cacheDir;
     private $interpreter;
+
     /**
      * @param string|null $dir Directory used to store compiled PHP files.
      * @param Parser|null $parser JMESPath parser to utilize
@@ -28,13 +27,16 @@ class CompilerRuntime
     {
         $this->parser = $parser ?: new Parser();
         $this->compiler = new TreeCompiler();
-        $dir = $dir ?: \sys_get_temp_dir();
-        if (!\is_dir($dir) && !\mkdir($dir, 0755, \true)) {
-            throw new \RuntimeException("Unable to create cache directory: {$dir}");
+        $dir = $dir ?: sys_get_temp_dir();
+
+        if (!is_dir($dir) && !mkdir($dir, 0755, true)) {
+            throw new \RuntimeException("Unable to create cache directory: $dir");
         }
-        $this->cacheDir = \realpath($dir);
+
+        $this->cacheDir = realpath($dir);
         $this->interpreter = new TreeInterpreter();
     }
+
     /**
      * Returns data from the provided input that matches a given JMESPath
      * expression.
@@ -49,21 +51,33 @@ class CompilerRuntime
      */
     public function __invoke($expression, $data)
     {
-        $functionName = 'jmespath_' . \md5($expression);
-        if (!\function_exists($functionName)) {
+        $functionName = 'jmespath_' . md5($expression);
+
+        if (!function_exists($functionName)) {
             $filename = "{$this->cacheDir}/{$functionName}.php";
-            if (!\file_exists($filename)) {
+            if (!file_exists($filename)) {
                 $this->compile($filename, $expression, $functionName);
             }
             require $filename;
         }
+
         return $functionName($this->interpreter, $data);
     }
+
     private function compile($filename, $expression, $functionName)
     {
-        $code = $this->compiler->visit($this->parser->parse($expression), $functionName, $expression);
-        if (!\file_put_contents($filename, $code)) {
-            throw new \RuntimeException(\sprintf('Unable to write the compiled PHP code to: %s (%s)', $filename, \var_export(\error_get_last(), \true)));
+        $code = $this->compiler->visit(
+            $this->parser->parse($expression),
+            $functionName,
+            $expression
+        );
+
+        if (!file_put_contents($filename, $code)) {
+            throw new \RuntimeException(sprintf(
+                'Unable to write the compiled PHP code to: %s (%s)',
+                $filename,
+                var_export(error_get_last(), true)
+            ));
         }
     }
 }

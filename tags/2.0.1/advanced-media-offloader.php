@@ -14,16 +14,16 @@
  * Domain Path:       /languages
  */
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
 
-if (!class_exists('ADVMO')) {
+if ( ! class_exists( 'ADVMO' ) ) {
 	/**
 	 * The main ADVMO class
 	 */
-	class ADVMO
-	{
+	class ADVMO {
+
 
 		/**
 		 * The plugin version number.
@@ -60,9 +60,8 @@ if (!class_exists('ADVMO')) {
 		 *
 		 * @return  void
 		 */
-		public function __construct()
-		{
-			$plugin_data = get_file_data(__FILE__, array('Version' => 'Version'));
+		public function __construct() {
+			$plugin_data = get_file_data( __FILE__, array( 'Version' => 'Version' ) );
 			$this->version = $plugin_data['Version'];
 		}
 
@@ -73,30 +72,29 @@ if (!class_exists('ADVMO')) {
 		 *
 		 * @return  void
 		 */
-		public function initialize()
-		{
+		public function initialize() {
 
 			// Define constants.
-			$this->define('ADVMO', true);
-			$this->define('ADVMO_PATH', plugin_dir_path(__FILE__));
-			$this->define('ADVMO_URL', plugin_dir_url(__FILE__));
-			$this->define('ADVMO_BASENAME', plugin_basename(__FILE__));
-			$this->define('ADVMO_VERSION', $this->version);
-			$this->define('ADVMO_API_VERSION', 1);
+			$this->define( 'ADVMO', true );
+			$this->define( 'ADVMO_PATH', plugin_dir_path( __FILE__ ) );
+			$this->define( 'ADVMO_URL', plugin_dir_url( __FILE__ ) );
+			$this->define( 'ADVMO_BASENAME', plugin_basename( __FILE__ ) );
+			$this->define( 'ADVMO_VERSION', $this->version );
+			$this->define( 'ADVMO_API_VERSION', 1 );
 
 			// Register activation hook.
-			register_activation_hook(__FILE__, array($this, 'plugin_activated'));
+			register_activation_hook( __FILE__, array( $this, 'plugin_activated' ) );
 
 			// Define settings.
 			$this->settings = array(
-				'name'                    => __('Advanced Media Offloader', 'advanced-media-offloader'),
-				'description'             => __('Offload WordPress media to Amazon S3, DigitalOcean Spaces, Min.io or Cloudflare R2.', 'advanced-media-offloader'),
-				'slug'                    => dirname(ADVMO_BASENAME),
+				'name'                    => __( 'Advanced Media Offloader', 'advanced-media-offloader' ),
+				'description'             => __( 'Offload WordPress media to Amazon S3, DigitalOcean Spaces, Min.io or Cloudflare R2.', 'advanced-media-offloader' ),
+				'slug'                    => dirname( ADVMO_BASENAME ),
 				'version'                 => ADVMO_VERSION,
 				'basename'                => ADVMO_BASENAME,
 				'path'                    => ADVMO_PATH,
 				'file'                    => __FILE__,
-				'url'                     => plugin_dir_url(__FILE__),
+				'url'                     => plugin_dir_url( __FILE__ ),
 				'show_admin'              => true,
 				'show_updates'            => true,
 				'enable_post_types'       => true,
@@ -114,29 +112,29 @@ if (!class_exists('ADVMO')) {
 				'offloader'               => '',
 			);
 
-			if (get_option('advmo_options') === false) {
-				update_option('advmo_options', $this->settings);
+			if ( get_option( 'advmo_options' ) === false ) {
+				update_option( 'advmo_options', $this->settings );
 			}
 
-			# Include Composer autoload.
-			if (file_exists(ADVMO_PATH . 'vendor/autoload.php')) {
+			// Include Composer autoload.
+			if ( file_exists( ADVMO_PATH . 'vendor/autoload.php' ) ) {
 				include_once ADVMO_PATH . 'vendor/autoload.php';
 			}
 
-			# include Utility Functions
+			// include Utility Functions
 			include_once ADVMO_PATH . 'utility-functions.php';
 
-			# check if AWS SDK is loaded
-			if (!class_exists(\Aws\S3\S3Client::class)) {
+			// check if AWS SDK is loaded
+			if ( ! class_exists( \Aws\S3\S3Client::class ) ) {
 				// Show admin notice if AWS SDK is missing.
 				add_action('admin_notices', function () {
-					$this->notice(__('AWS SDK for PHP is required to use Advanced Media Offloader. Please install it via Composer.', 'advanced-media-offloader'), 'error');
+					$this->notice( __( 'AWS SDK for PHP is required to use Advanced Media Offloader. Please install it via Composer.', 'advanced-media-offloader' ), 'error' );
 				});
 				return;
 			}
 
-			# Include admin.
-			if (is_admin()) {
+			// Include admin.
+			if ( is_admin() ) {
 				new Advanced_Media_Offloader\Admin\GeneralSettings();
 			}
 
@@ -150,26 +148,25 @@ if (!class_exists('ADVMO')) {
 		 *
 		 * @return  void
 		 */
-		public function init()
-		{
+		public function init() {
 			// Load textdomain file.
-			load_plugin_textdomain('advanced-media-offloader', false, dirname(plugin_basename(__FILE__)) . '/languages/');
+			load_plugin_textdomain( 'advanced-media-offloader', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
 
 			// Get selected cloud provider in plugin settings page.
 			$cloud_provider_key = advmo_get_cloud_provider_key();
 
-			if ($cloud_provider_key) {
+			if ( $cloud_provider_key ) {
 				try {
 					// Use the Factory to create the cloud provider instance.
-					$cloud_provider = Advanced_Media_Offloader\Factories\CloudProviderFactory::create($cloud_provider_key);
+					$cloud_provider = Advanced_Media_Offloader\Factories\CloudProviderFactory::create( $cloud_provider_key );
 
 					// Instantiate the Offloader with the cloud provider.
-					$this->offloader = Advanced_Media_Offloader\Offloader::get_instance($cloud_provider);
+					$this->offloader = Advanced_Media_Offloader\Offloader::get_instance( $cloud_provider );
 					$this->offloader->initializeHooks();
-				} catch (Exception $e) {
+				} catch ( Exception $e ) {
 					// Handle exception or display admin notice.
-					add_action('admin_notices', function () use ($e) {
-						$this->notice($e->getMessage(), 'error');
+					add_action('admin_notices', function () use ( $e ) {
+						$this->notice( $e->getMessage(), 'error' );
 					});
 				}
 			}
@@ -180,34 +177,30 @@ if (!class_exists('ADVMO')) {
 		 *
 		 * @since 1.0.0
 		 */
-		public function plugin_activated()
-		{
+		public function plugin_activated() {
 			// Set the first activated version of Advanced Media Offloader.
-			if (null === get_option('advmo_first_activated_version', null)) {
-				update_option('advmo_first_activated_version', ADVMO_VERSION, true);
+			if ( null === get_option( 'advmo_first_activated_version', null ) ) {
+				update_option( 'advmo_first_activated_version', ADVMO_VERSION, true );
 			}
 		}
 
-		public function define($name, $value = true)
-		{
-			if (!defined($name)) {
-				define($name, $value);
+		public function define( $name, $value = true ) {
+			if ( ! defined( $name ) ) {
+				define( $name, $value );
 			}
 		}
 
-		public function notice($message, $type = 'info')
-		{
+		public function notice( $message, $type = 'info' ) {
 			$class = 'notice notice-' . $type;
-			printf('<div class="%1$s"><p>%2$s</p></div>', esc_attr($class), esc_attr($message));
+			printf( '<div class="%1$s"><p>%2$s</p></div>', esc_attr( $class ), esc_attr( $message ) );
 		}
 	}
 
-	function advmo()
-	{
+	function advmo() {
 		global $advmo;
 
 		// Instantiate only once.
-		if (!isset($advmo)) {
+		if ( ! isset( $advmo ) ) {
 			$advmo = new ADVMO();
 			$advmo->initialize();
 		}

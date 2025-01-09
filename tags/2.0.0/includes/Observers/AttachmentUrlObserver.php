@@ -6,8 +6,8 @@ use Advanced_Media_Offloader\Abstracts\S3_Provider;
 use Advanced_Media_Offloader\Interfaces\ObserverInterface;
 use Advanced_Media_Offloader\Traits\OffloaderTrait;
 
-class AttachmentUrlObserver implements ObserverInterface
-{
+class AttachmentUrlObserver implements ObserverInterface {
+
     use OffloaderTrait;
 
     /**
@@ -20,8 +20,7 @@ class AttachmentUrlObserver implements ObserverInterface
      *
      * @param S3_Provider $cloudProvider
      */
-    public function __construct(S3_Provider $cloudProvider)
-    {
+    public function __construct( S3_Provider $cloudProvider ) {
         $this->cloudProvider = $cloudProvider;
     }
 
@@ -30,9 +29,8 @@ class AttachmentUrlObserver implements ObserverInterface
      *
      * @return void
      */
-    public function register(): void
-    {
-        add_filter('wp_get_attachment_url', [$this, 'modifyAttachmentUrl'], 10, 2);
+    public function register(): void {
+        add_filter( 'wp_get_attachment_url', [ $this, 'modifyAttachmentUrl' ], 10, 2 );
     }
 
     /**
@@ -42,11 +40,10 @@ class AttachmentUrlObserver implements ObserverInterface
      * @param int    $post_id  The attachment ID.
      * @return string          The modified URL.
      */
-    public function modifyAttachmentUrl(string $url, int $post_id): string
-    {
-        if ($this->is_offloaded($post_id)) {
-            $subDir = $this->get_attachment_subdir($post_id);
-            $url = rtrim($this->cloudProvider->getDomain(), '/') . '/' . ltrim($subDir, '/') . basename($url);
+    public function modifyAttachmentUrl( string $url, int $post_id ): string {
+        if ( $this->is_offloaded( $post_id ) ) {
+            $subDir = $this->get_attachment_subdir( $post_id );
+            $url = rtrim( $this->cloudProvider->getDomain(), '/' ) . '/' . ltrim( $subDir, '/' ) . basename( $url );
         }
         return $url;
     }
