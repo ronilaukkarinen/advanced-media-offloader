@@ -3,7 +3,7 @@
 namespace Advanced_Media_Offloader\Integrations;
 
 use Advanced_Media_Offloader\Abstracts\S3_Provider;
-use WPFitter\Aws\S3\S3Client;
+use Aws\S3\S3Client;
 
 class AmazonS3 extends S3_Provider {
 

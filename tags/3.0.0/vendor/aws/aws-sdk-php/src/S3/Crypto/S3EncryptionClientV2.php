@@ -12,7 +12,7 @@ use WPFitter\Aws\Crypto\EncryptionTraitV2;
 use WPFitter\Aws\Crypto\MetadataEnvelope;
 use WPFitter\Aws\Crypto\MaterialsProvider;
 use WPFitter\Aws\Crypto\Cipher\CipherBuilderTrait;
-use WPFitter\Aws\S3\S3Client;
+use Aws\S3\S3Client;
 use WPFitter\GuzzleHttp\Promise;
 use WPFitter\GuzzleHttp\Promise\PromiseInterface;
 use WPFitter\GuzzleHttp\Psr7;

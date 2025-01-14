@@ -4,7 +4,7 @@ namespace WPFitter\Aws\S3\Crypto;
 
 use WPFitter\Aws\Crypto\MetadataStrategyInterface;
 use WPFitter\Aws\Crypto\MetadataEnvelope;
-use WPFitter\Aws\S3\S3Client;
+use Aws\S3\S3Client;
 /**
  * Stores and reads encryption MetadataEnvelope information in a file on Amazon
  * S3.
