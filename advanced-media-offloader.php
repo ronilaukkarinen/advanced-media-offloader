@@ -3,7 +3,7 @@
   * Plugin Name:       Advanced Media Offloader + WP-CLI
   * Plugin URI:        https://github.com/ronilaukkarinen/advanced-media-offloader
   * Description:       Offload WordPress media to Amazon S3, DigitalOcean Spaces, Min.io or Cloudflare R2. A fork with WP-CLI support, <code>wp advmo offload</code>.
-  * Version:           3.1.1rc
+  * Version:           3.1.2rc
   * Requires at least: 5.6
   * Tested up to:      6.7.1
   * Requires PHP:      8.1
