@@ -74,7 +74,7 @@ class Commands {
 
             // Validate cloud provider settings
             $settings = get_option( 'advmo_settings', [] );
-            if ( empty( $settings['provider'] ) || empty( $settings['bucket'] ) ) {
+            if ( empty( $settings['cloud_provider'] ) ) {
                 WP_CLI::error( 'Cloud provider settings are incomplete. Please configure the plugin settings first.' );
                 return;
             }
@@ -82,7 +82,7 @@ class Commands {
             // Validate we can connect to the cloud provider
             try {
                 $cloud_provider = CloudProviderFactory::create( $cloud_provider_key );
-                $cloud_provider->validateConnection();
+                $cloud_provider->checkConnection();
             } catch ( \Exception $e ) {
                 WP_CLI::error( 'Could not connect to cloud provider: ' . $e->getMessage() );
                 return;
