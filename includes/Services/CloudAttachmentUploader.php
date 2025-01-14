@@ -13,32 +13,107 @@ class CloudAttachmentUploader {
 
     public function __construct( S3_Provider $cloudProvider ) {
         $this->cloudProvider = $cloudProvider;
+
+        // Add filters for URL modification
+        add_filter('wp_get_attachment_url', [$this, 'modifyAttachmentUrl'], 10, 2);
+        add_filter('wp_calculate_image_srcset', [$this, 'modifyImageSrcset'], 10, 5);
+    }
+
+    public function modifyAttachmentUrl($url, $post_id) {
+        if ($this->is_offloaded($post_id)) {
+            $subdir = get_post_meta($post_id, 'advmo_path', true);
+            $domain = trim($this->cloudProvider->getDomain(), '/');
+            return 'https://' . $domain . '/' . trim($subdir, '/') . '/' . basename($url);
+        }
+        return $url;
+    }
+
+    public function modifyImageSrcset($sources, $size_array, $image_src, $image_meta, $attachment_id) {
+        if ($this->is_offloaded($attachment_id)) {
+            $cdnUrl = 'https://' . trailingslashit($this->cloudProvider->getDomain());
+            foreach ($sources as $key => $source) {
+                $sources[$key]['url'] = str_replace(
+                    trailingslashit(wp_get_upload_dir()['baseurl']),
+                    $cdnUrl,
+                    $source['url']
+                );
+            }
+        }
+        return $sources;
     }
 
     public function uploadAttachment( int $attachment_id, bool $skipDeletion = false ): bool {
         try {
-            // Validate attachment exists
-            if ( ! wp_attachment_is_image( $attachment_id ) ) {
-                throw new \Exception( 'Attachment is not an image' );
-            }
-
             // Get file path
             $file_path = get_attached_file( $attachment_id );
             if ( ! file_exists( $file_path ) ) {
                 throw new \Exception( 'File does not exist' );
             }
 
-            // Upload file
-            $result = $this->cloudProvider->upload( $file_path, $attachment_id );
+            // Get upload directory info
+            $upload_dir = wp_upload_dir();
+            $base_dir = $upload_dir['basedir'];
+            $relative_path = str_replace( $base_dir . '/', '', $file_path );
 
-            if ( $result && ! $skipDeletion ) {
-                // Handle deletion based on retention policy
+            // Get the year/month directory structure
+            $time = get_post_time( 'Ymd', true, $attachment_id );
+            $subdir = $time ? $time . '/' : '';
+
+            // Upload file with the date-based directory structure
+            $uploadResult = $this->cloudProvider->uploadFile( $file_path, $subdir . wp_basename( $file_path ) );
+
+            if ( ! $uploadResult ) {
+                update_post_meta( $attachment_id, 'advmo_offloaded', false );
+                return false;
+            }
+
+            // Handle image sizes if this is an image
+            $metadata = wp_get_attachment_metadata( $attachment_id );
+            if ( ! empty( $metadata['sizes'] ) ) {
+                foreach ( $metadata['sizes'] as $size => $data ) {
+                    $sized_file = str_replace( wp_basename( $file_path ), $data['file'], $file_path );
+                    if ( file_exists( $sized_file ) ) {
+                        $uploadResult = $this->cloudProvider->uploadFile( $sized_file, $subdir . wp_basename( $sized_file ) );
+                        if ( ! $uploadResult ) {
+                            update_post_meta( $attachment_id, 'advmo_offloaded', false );
+                            return false;
+                        }
+                    }
+                }
+            }
+
+            // Update metadata to mark as offloaded
+            update_post_meta( $attachment_id, 'advmo_path', $subdir );
+            update_post_meta( $attachment_id, 'advmo_offloaded', true );
+            update_post_meta( $attachment_id, 'advmo_offloaded_at', time() );
+            update_post_meta( $attachment_id, 'advmo_provider', $this->cloudProvider->getProviderName() );
+            update_post_meta( $attachment_id, 'advmo_bucket', $this->cloudProvider->getBucket() );
+
+            // Update the attachment URL in WordPress
+            $cdn_url = $this->cloudProvider->getBaseUrl() . '/' . $subdir . wp_basename( $file_path );
+            update_post_meta( $attachment_id, '_wp_attached_file', $subdir . wp_basename( $file_path ) );
+
+            // Update the guid and attachment metadata
+            global $wpdb;
+            $wpdb->update(
+                $wpdb->posts,
+                ['guid' => $cdn_url],
+                ['ID' => $attachment_id]
+            );
+
+            if ( ! empty( $metadata ) ) {
+                $metadata['file'] = $subdir . wp_basename( $file_path );
+                wp_update_attachment_metadata( $attachment_id, $metadata );
+            }
+
+            if ( ! $skipDeletion ) {
                 $this->handleLocalFileDeletion( $attachment_id );
             }
 
-            return $result;
+            return true;
+
         } catch ( \Exception $e ) {
-            error_log( 'Advanced Media Offloader upload error: ' . $e->getMessage() );
+            error_log( 'Advanced Media Offloader - Upload Error: ' . $e->getMessage() );
             return false;
         }
     }

@@ -267,6 +267,163 @@ class Commands {
         }
     }
 
+    /**
+     * Upload a single media file to cloud storage
+     *
+     * ## OPTIONS
+     *
+     * <attachment_id>
+     * : The ID of the attachment to offload
+     *
+     * [--dry-run]
+     * : Preview what would be offloaded without actually offloading
+     *
+     * [--verbose]
+     * : Show verbose information
+     *
+     * ## EXAMPLES
+     *
+     *     wp advmo upload 123
+     *     wp advmo upload 123 --dry-run
+     *     wp advmo upload 123 --verbose
+     *
+     * @when after_wp_load
+     */
+    public function upload($args, $assoc_args) {
+        $attachment_id = (int) $args[0];
+        $dry_run = isset($assoc_args['dry-run']);
+        $verbose = isset($assoc_args['verbose']);
+
+        if ($verbose) {
+            WP_CLI::line('Verbose mode enabled');
+            WP_CLI::line('Arguments received:');
+            WP_CLI::line(print_r($assoc_args, true));
+        }
+
+        try {
+            // Validate the attachment exists
+            if (!get_post($attachment_id)) {
+                WP_CLI::error("Attachment with ID {$attachment_id} not found.");
+                return;
+            }
+
+            // Check if already offloaded
+            $is_offloaded = get_post_meta($attachment_id, 'advmo_offloaded', true);
+            if ($is_offloaded) {
+                WP_CLI::warning("Attachment {$attachment_id} is already offloaded.");
+                return;
+            }
+
+            $cloud_provider_key = advmo_get_cloud_provider_key();
+            if (empty($cloud_provider_key)) {
+                WP_CLI::error('No cloud provider configured. Please configure a provider in the plugin settings first.');
+                return;
+            }
+
+            // Get file information
+            $file_path = get_attached_file($attachment_id);
+            if (!file_exists($file_path)) {
+                WP_CLI::error("File not found: {$file_path}");
+                return;
+            }
+
+            if ($dry_run) {
+                WP_CLI::line(sprintf(
+                    'Would offload: [ID: %d] %s (%s)',
+                    $attachment_id,
+                    basename($file_path),
+                    size_format(filesize($file_path))
+                ));
+                WP_CLI::success('Dry run completed. No files were offloaded.');
+                return;
+            }
+
+            // Upload the file
+            $cloud_provider = CloudProviderFactory::create($cloud_provider_key);
+            $uploader = new \Advanced_Media_Offloader\Services\CloudAttachmentUploader($cloud_provider);
+
+            if ($verbose) {
+                WP_CLI::line("\n=== Debug Information ===");
+                WP_CLI::line("File path: {$file_path}");
+                WP_CLI::line('File exists: ' . (file_exists($file_path) ? 'yes' : 'no'));
+                WP_CLI::line('File size: ' . size_format(filesize($file_path)));
+                WP_CLI::line('File permissions: ' . substr(sprintf('%o', fileperms($file_path)), -4));
+                WP_CLI::line('========================');
+            }
+
+            $result = $uploader->uploadAttachment($attachment_id, true);
+
+            if ($result) {
+                WP_CLI::success(sprintf('Successfully offloaded: %s', basename($file_path)));
+            } else {
+                WP_CLI::error(sprintf('Failed to offload: %s', basename($file_path)));
+            }
+
+        } catch (\Exception $e) {
+            WP_CLI::error('Error during upload: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Fix the URL structure for an offloaded media file
+     *
+     * ## OPTIONS
+     *
+     * <attachment_id>
+     * : The ID of the attachment to fix
+     *
+     * [--dry-run]
+     * : Preview changes without making them
+     */
+    public function fix_url($args, $assoc_args) {
+        $attachment_id = (int) $args[0];
+        $dry_run = isset($assoc_args['dry-run']);
+
+        try {
+            // Validate the attachment exists
+            if (!get_post($attachment_id)) {
+                WP_CLI::error("Attachment with ID {$attachment_id} not found.");
+                return;
+            }
+
+            // Check if it's offloaded
+            $is_offloaded = get_post_meta($attachment_id, 'advmo_offloaded', true);
+            if (!$is_offloaded) {
+                WP_CLI::error("Attachment {$attachment_id} is not offloaded.");
+                return;
+            }
+
+            // Get the file path from attachment metadata
+            $file = get_post_meta($attachment_id, '_wp_attached_file', true);
+
+            // Try to extract the date directory from the existing path
+            if (preg_match('/^(\d{12})\//', $file, $matches)) {
+                $subdir = $matches[1] . '/';
+            } else {
+                // Fallback to using the attachment's post date
+                $post = get_post($attachment_id);
+                $subdir = date('YmdHis', strtotime($post->post_date)) . '/';
+            }
+
+            if ($dry_run) {
+                WP_CLI::line("Would update path for attachment {$attachment_id} to: {$subdir}");
+                return;
+            }
+
+            // Update the path metadata
+            update_post_meta($attachment_id, 'advmo_path', $subdir);
+
+            // Also update the attached file path
+            $filename = basename($file);
+            update_post_meta($attachment_id, '_wp_attached_file', $subdir . $filename);
+
+            WP_CLI::success("Updated URL structure for attachment {$attachment_id} to use {$subdir}");
+
+        } catch (\Exception $e) {
+            WP_CLI::error('Error: ' . $e->getMessage());
+        }
+    }
+
     private function get_unoffloaded_attachments( $batch_size ) {
         return get_posts([
             'post_type' => 'attachment',
