@@ -147,7 +147,7 @@ class Offloader {
 				$status .= " (Bucket: $bucket)";
 			}
 			if ( $offloaded_at ) {
-				$status .= ' on ' . date( 'Y-m-d H:i:s', $offloaded_at );
+				$status .= ' on ' . gmdate( 'Y-m-d H:i:s', $offloaded_at );
 			}
 			$color = 'green';
 		} else {

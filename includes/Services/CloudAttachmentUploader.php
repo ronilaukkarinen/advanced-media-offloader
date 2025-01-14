@@ -15,25 +15,25 @@ class CloudAttachmentUploader {
         $this->cloudProvider = $cloudProvider;
 
         // Add filters for URL modification
-        add_filter('wp_get_attachment_url', [$this, 'modifyAttachmentUrl'], 10, 2);
-        add_filter('wp_calculate_image_srcset', [$this, 'modifyImageSrcset'], 10, 5);
+        add_filter( 'wp_get_attachment_url', [ $this, 'modifyAttachmentUrl' ], 10, 2 );
+        add_filter( 'wp_calculate_image_srcset', [ $this, 'modifyImageSrcset' ], 10, 5 );
     }
 
-    public function modifyAttachmentUrl($url, $post_id) {
-        if ($this->is_offloaded($post_id)) {
-            $subdir = get_post_meta($post_id, 'advmo_path', true);
-            $domain = trim($this->cloudProvider->getDomain(), '/');
-            return 'https://' . $domain . '/' . trim($subdir, '/') . '/' . basename($url);
+    public function modifyAttachmentUrl( $url, $post_id ) {
+        if ( $this->is_offloaded( $post_id ) ) {
+            $subdir = get_post_meta( $post_id, 'advmo_path', true );
+            $domain = trim( $this->cloudProvider->getDomain(), '/' );
+            return 'https://' . $domain . '/' . trim( $subdir, '/' ) . '/' . basename( $url );
         }
         return $url;
     }
 
-    public function modifyImageSrcset($sources, $size_array, $image_src, $image_meta, $attachment_id) {
-        if ($this->is_offloaded($attachment_id)) {
-            $cdnUrl = 'https://' . trailingslashit($this->cloudProvider->getDomain());
-            foreach ($sources as $key => $source) {
-                $sources[$key]['url'] = str_replace(
-                    trailingslashit(wp_get_upload_dir()['baseurl']),
+    public function modifyImageSrcset( $sources, $size_array, $image_src, $image_meta, $attachment_id ) {
+        if ( $this->is_offloaded( $attachment_id ) ) {
+            $cdnUrl = 'https://' . trailingslashit( $this->cloudProvider->getDomain() );
+            foreach ( $sources as $key => $source ) {
+                $sources[ $key ]['url'] = str_replace(
+                    trailingslashit( wp_get_upload_dir()['baseurl'] ),
                     $cdnUrl,
                     $source['url']
                 );
@@ -53,13 +53,17 @@ class CloudAttachmentUploader {
             // Get upload directory info
             $upload_dir = wp_upload_dir();
             $base_dir = $upload_dir['basedir'];
+
+            // Get the relative path maintaining WordPress's directory structure
             $relative_path = str_replace( $base_dir . '/', '', $file_path );
+            $subdir = dirname( $relative_path );
+            if ( $subdir === '.' ) {
+                $subdir = '';
+            } else {
+                $subdir .= '/';
+            }
 
-            // Get the year/month directory structure
-            $time = get_post_time( 'Ymd', true, $attachment_id );
-            $subdir = $time ? $time . '/' : '';
-
-            // Upload file with the date-based directory structure
+            // Upload file maintaining WordPress's directory structure
             $uploadResult = $this->cloudProvider->uploadFile( $file_path, $subdir . wp_basename( $file_path ) );
 
             if ( ! $uploadResult ) {
@@ -90,15 +94,15 @@ class CloudAttachmentUploader {
             update_post_meta( $attachment_id, 'advmo_bucket', $this->cloudProvider->getBucket() );
 
             // Update the attachment URL in WordPress
-            $cdn_url = $this->cloudProvider->getBaseUrl() . '/' . $subdir . wp_basename( $file_path );
+            $cdn_url = rtrim( $this->cloudProvider->getDomain(), '/' ) . '/' . $subdir . wp_basename( $file_path );
             update_post_meta( $attachment_id, '_wp_attached_file', $subdir . wp_basename( $file_path ) );
 
             // Update the guid and attachment metadata
             global $wpdb;
             $wpdb->update(
                 $wpdb->posts,
-                ['guid' => $cdn_url],
-                ['ID' => $attachment_id]
+                [ 'guid' => $cdn_url ],
+                [ 'ID' => $attachment_id ],
             );
 
             if ( ! empty( $metadata ) ) {
@@ -290,8 +294,8 @@ class CloudAttachmentUploader {
     protected function attachment_exists_on_disk( $attachment_id ) {
         $errors = array();
 
-        // Get the full path to the attachment file
-        $file_path = get_attached_file( $attachment_id );
+        // Get the full path using WordPress upload directory
+        $file_path = $this->get_wordpress_upload_path( $attachment_id );
 
         // Check if the main file exists
         if ( ! file_exists( $file_path ) ) {
@@ -302,8 +306,6 @@ class CloudAttachmentUploader {
         if ( wp_attachment_is_image( $attachment_id ) ) {
             $metadata = wp_get_attachment_metadata( $attachment_id );
             if ( ! empty( $metadata['sizes'] ) ) {
-                $upload_dir = wp_upload_dir();
-                $base_dir = trailingslashit( $upload_dir['basedir'] );
                 $file_dir = trailingslashit( dirname( $file_path ) );
 
                 foreach ( $metadata['sizes'] as $size => $size_info ) {
@@ -317,18 +319,39 @@ class CloudAttachmentUploader {
 
         // Save errors to post meta
         if ( ! empty( $errors ) ) {
-            $existing_errors = get_post_meta( $attachment_id, 'advmo_error_log', true );
-            if ( ! is_array( $existing_errors ) ) {
-                $existing_errors = array();
-            }
-            $updated_errors = array_merge( $existing_errors, $errors );
-            update_post_meta( $attachment_id, 'advmo_error_log', $updated_errors );
+            update_post_meta( $attachment_id, 'advmo_error_log', $errors );
         } else {
-            // If there are no errors, remove any existing error log
             delete_post_meta( $attachment_id, 'advmo_error_log' );
         }
 
-        // Return true if no errors, false otherwise
         return empty( $errors );
+    }
+
+    protected function get_wordpress_upload_path( $attachment_id ) {
+        // Get WordPress upload directory information
+        $upload_dir = wp_upload_dir();
+
+        // First try to get the file path directly
+        $file_path = get_attached_file( $attachment_id );
+
+        // Get the stored path from WordPress metadata
+        $stored_path = get_post_meta( $attachment_id, '_wp_attached_file', true );
+
+        // If the direct file path doesn't exist, try constructing it from the stored path
+        if ( ! file_exists( $file_path ) && $stored_path ) {
+            // Remove any potential absolute path components for security
+            $stored_path = ltrim( $stored_path, '/' );
+            $file_path = path_join( $upload_dir['basedir'], $stored_path );
+        }
+
+        // If still no file found, check if there's a custom upload path set
+        if ( ! file_exists( $file_path ) ) {
+            $custom_upload_path = get_option( 'upload_path' );
+            if ( $custom_upload_path && $stored_path ) {
+                $file_path = path_join( $custom_upload_path, $stored_path );
+            }
+        }
+
+        return $file_path;
     }
 }
