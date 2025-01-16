@@ -22,15 +22,17 @@ class CloudAttachmentUploader {
     public function modifyAttachmentUrl( $url, $post_id ) {
         if ( $this->is_offloaded( $post_id ) ) {
             $subdir = get_post_meta( $post_id, 'advmo_path', true );
-            $domain = trim( $this->cloudProvider->getDomain(), '/' );
-            return 'https://' . $domain . '/' . trim( $subdir, '/' ) . '/' . basename( $url );
+            $domain = rtrim( $this->cloudProvider->getDomain(), '/' );
+            $subdir = ltrim( $subdir, '/' );
+            return 'https://' . $domain . '/' . $subdir . basename( $url );
         }
         return $url;
     }
 
     public function modifyImageSrcset( $sources, $size_array, $image_src, $image_meta, $attachment_id ) {
         if ( $this->is_offloaded( $attachment_id ) ) {
-            $cdnUrl = 'https://' . trailingslashit( $this->cloudProvider->getDomain() );
+            $domain = rtrim( $this->cloudProvider->getDomain(), '/' );
+            $cdnUrl = 'https://' . $domain . '/';
             foreach ( $sources as $key => $source ) {
                 $sources[ $key ]['url'] = str_replace(
                     trailingslashit( wp_get_upload_dir()['baseurl'] ),
@@ -63,12 +65,17 @@ class CloudAttachmentUploader {
                 $subdir .= '/';
             }
 
+            if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+              error_log( 'ADVMO Debug - subdir: ' . print_r( $subdir, true ) );
+              error_log( 'ADVMO Debug - file_path: ' . print_r( $file_path, true ) );
+            }
+
             // Upload file maintaining WordPress's directory structure
             $uploadResult = $this->cloudProvider->uploadFile( $file_path, $subdir . wp_basename( $file_path ) );
 
             if ( ! $uploadResult ) {
-                update_post_meta( $attachment_id, 'advmo_offloaded', false );
-                return false;
+              update_post_meta( $attachment_id, 'advmo_offloaded', false );
+              return false;
             }
 
             // Handle image sizes if this is an image
@@ -356,9 +363,9 @@ class CloudAttachmentUploader {
     }
 
     protected function getProviderUrl() {
-        if (method_exists($this->cloudProvider, 'getBaseUrl')) {
-            return rtrim($this->cloudProvider->getBaseUrl(), '/');
+        if ( method_exists( $this->cloudProvider, 'getBaseUrl' ) ) {
+            return rtrim( $this->cloudProvider->getBaseUrl(), '/' );
         }
-        return rtrim($this->cloudProvider->getDomain(), '/');
+        return rtrim( $this->cloudProvider->getDomain(), '/' );
     }
 }

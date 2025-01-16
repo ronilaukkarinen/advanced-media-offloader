@@ -4,6 +4,7 @@
 * Feature: Upload a single media file to cloud storage
 * General fixes and improvements
 * Fix: add fallback support for cloud providers using getDomain() instead of getBaseUrl()
+* Add debug logs for CloudAttachmentUploader
 
 ### 3.1.1: 2025-01-09
 
