@@ -115,7 +115,7 @@ class Commands {
               break; //phpcs:ignore
               case 2:
                 $deletionMode = ' (Full Cloud Migration enabled - will remove all local files)';
-              break; //phpcs:ignore
+              break; // phpcs:ignore PSR2.ControlStructures.SwitchDeclaration.BreakIndent
               default:
                 $deletionMode = ' (keeping local files)';
             }

@@ -58,4 +58,78 @@ class Offloader {
 			}
 		}
 	}
+
+	public function modifyAttachmentUrl( $url, $post_id ) {
+		if ( $this->isOffloaded( $post_id ) ) {
+			$subDir = $this->get_attachment_subdir( $post_id );
+			$domain = rtrim( $this->cloudProvider->getDomain(), '/' );
+			$subDir = ltrim( $subDir, '/' );
+			$basename = basename( $url );
+			$url = $domain . '/' . $subDir . $basename;
+		}
+		return $url;
+	}
+
+	private function uploadToCloud( $attachment_id ) {
+		$file = get_attached_file( $attachment_id );
+
+		// Verify original file exists
+		if ( ! file_exists( $file ) ) {
+			error_log( "Advanced Media Offloader - Original file not found: $file" );
+			return false;
+		}
+
+		$subdir = $this->get_attachment_subdir( $attachment_id );
+		$uploadResult = $this->cloudProvider->uploadFile( $file, $subdir . wp_basename( $file ) );
+
+		if ( ! $uploadResult ) {
+			update_post_meta( $attachment_id, 'advmo_offloaded', false );
+			return false;
+		}
+
+		$metadata = wp_get_attachment_metadata( $attachment_id );
+
+		// Handle image sizes
+		if ( ! empty( $metadata['sizes'] ) ) {
+			$metadata_sizes = $this->uniqueMetaDataSizes( $metadata['sizes'] );
+			foreach ( $metadata_sizes as $size => $data ) {
+				$sized_file = str_replace( wp_basename( $file ), $data['file'], $file );
+
+				// Verify sized file exists before attempting upload
+				if ( ! file_exists( $sized_file ) ) {
+					error_log( "Advanced Media Offloader - Sized file not found: $sized_file" );
+					continue;
+				}
+
+				$uploadResult = $this->cloudProvider->uploadFile( $sized_file, $subdir . wp_basename( $sized_file ) );
+				if ( ! $uploadResult ) {
+					update_post_meta( $attachment_id, 'advmo_offloaded', false );
+					return false;
+				}
+			}
+		}
+
+		// Only delete local files after ALL uploads are successful
+		$deleteLocalRule = $this->shouldDeleteLocal();
+		if ( $deleteLocalRule !== 0 ) {
+			$this->deleteLocalFile( $attachment_id, $deleteLocalRule );
+		}
+
+		return true;
+	}
+
+	public function modifyImageSrcset($sources, $size_array, $image_src, $image_meta, $attachment_id) {
+		if ($this->isOffloaded($attachment_id)) {
+			$domain = rtrim($this->cloudProvider->getDomain(), '/');
+			$cdnUrl = $domain . '/';
+			foreach ($sources as $key => $source) {
+				$sources[$key]['url'] = str_replace(
+					trailingslashit(wp_get_upload_dir()['baseurl']),
+					$cdnUrl,
+					$source['url']
+				);
+			}
+		}
+		return $sources;
+	}
 }

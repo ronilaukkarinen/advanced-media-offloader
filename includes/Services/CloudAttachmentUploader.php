@@ -17,14 +17,21 @@ class CloudAttachmentUploader {
     // Add filters for URL modification
     add_filter( 'wp_get_attachment_url', [ $this, 'modifyAttachmentUrl' ], 10, 2 );
     add_filter( 'wp_calculate_image_srcset', [ $this, 'modifyImageSrcset' ], 10, 5 );
+    add_filter( 'wp_get_attachment_image_src', function ( $image, $id ) {
+      if ( is_array( $image ) && ! empty( $image[0] ) && strpos( $image[0], 'http' ) !== 0 ) {
+        $image[0] = 'https://' . $image[0];
+      }
+      return $image;
+    }, 10, 2);
   }
 
   public function modifyAttachmentUrl( $url, $post_id ) {
     if ( $this->is_offloaded( $post_id ) ) {
       $subdir = get_post_meta( $post_id, 'advmo_path', true );
-      $domain = rtrim( $this->cloudProvider->getDomain(), '/' );
-      $subdir = ltrim( $subdir, '/' );
-      return 'https://' . $domain . '/' . $subdir . basename( $url );
+      $domain = $this->cloudProvider->getDomain();
+
+      $domain = preg_replace( '#^https?://#', '', $domain );
+      return 'https://' . $domain . '/' . ltrim( $subdir, '/' ) . basename( $url );
     }
     return $url;
   }

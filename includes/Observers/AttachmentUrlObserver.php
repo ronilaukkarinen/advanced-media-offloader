@@ -18,7 +18,7 @@ class AttachmentUrlObserver implements ObserverInterface {
     /**
      * Constructor.
      *
-     * @param S3_Provider $cloudProvider
+     * @param S3_Provider $cloudProvider // phpcs:ignore Squiz.Commenting.FunctionComment.MissingParamComment
      */
     public function __construct( S3_Provider $cloudProvider ) {
         $this->cloudProvider = $cloudProvider;
