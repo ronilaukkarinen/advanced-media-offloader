@@ -117,19 +117,4 @@ class Offloader {
 
 		return true;
 	}
-
-	public function modifyImageSrcset($sources, $size_array, $image_src, $image_meta, $attachment_id) {
-		if ($this->isOffloaded($attachment_id)) {
-			$domain = rtrim($this->cloudProvider->getDomain(), '/');
-			$cdnUrl = $domain . '/';
-			foreach ($sources as $key => $source) {
-				$sources[$key]['url'] = str_replace(
-					trailingslashit(wp_get_upload_dir()['baseurl']),
-					$cdnUrl,
-					$source['url']
-				);
-			}
-		}
-		return $sources;
-	}
 }
