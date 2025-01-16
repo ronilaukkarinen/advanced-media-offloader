@@ -370,28 +370,34 @@ class CloudAttachmentUploader {
   }
 
   private function handleLocalFileDeletion( $attachment_id ): void {
-    $settings = get_option( 'advmo_settings' );
-    $delete_after_offload = ! empty( $settings['delete_after_offload'] ) && $settings['delete_after_offload'] === '1';
+    $settings = get_option('advmo_settings');
+    $deleteLocalRule = isset($settings['retention_policy']) ? (int) $settings['retention_policy'] : 0;
 
-    if ( $delete_after_offload ) {
-      $file = get_attached_file( $attachment_id, true );
-      if ( file_exists( $file ) ) {
-        unlink( $file );
-      }
+    if ($deleteLocalRule === 0) {
+      return;
+    }
 
-      // Also delete resized versions
-      $metadata = wp_get_attachment_metadata( $attachment_id );
-      if ( ! empty( $metadata['sizes'] ) ) {
-        $upload_dir = wp_upload_dir();
-        $base_dir = dirname( $file );
+    $file = get_attached_file($attachment_id, true);
 
-        foreach ( $metadata['sizes'] as $size ) {
-          $sized_file = $base_dir . '/' . $size['file'];
-          if ( file_exists( $sized_file ) ) {
-            unlink( $sized_file );
-          }
+    // Delete resized versions
+    $metadata = wp_get_attachment_metadata($attachment_id);
+    if (!empty($metadata['sizes'])) {
+      $upload_dir = wp_upload_dir();
+      $base_dir = dirname($file);
+
+      foreach ($metadata['sizes'] as $size) {
+        $sized_file = $base_dir . '/' . $size['file'];
+        if (file_exists($sized_file)) {
+          unlink($sized_file);
         }
       }
     }
+
+    // Delete original file only if full migration is enabled
+    if ($deleteLocalRule === 2 && file_exists($file)) {
+      unlink($file);
+    }
+
+    update_post_meta($attachment_id, 'advmo_retention_policy', $deleteLocalRule);
   }
 }
