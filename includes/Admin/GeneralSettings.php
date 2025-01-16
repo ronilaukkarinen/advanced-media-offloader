@@ -155,7 +155,7 @@ class GeneralSettings {
 		echo '<div class="advmo-checkbox-option">';
 		echo '<input type="checkbox" id="path_prefix_active" name="advmo_settings[path_prefix_active]" value="1" ' . checked( 1, $path_prefix_Active, false ) . '/>';
 		echo '<label for="path_prefix_active">' . esc_html__( 'Use Custom Path Prefix', 'advanced-media-offloader' ) . '</label>';
-		echo '<p class="description">' . '<input type="input" id="path_prefix" name="advmo_settings[path_prefix]" value="' . esc_html( $path_prefix ) . '"' . ( $path_prefix_Active ? '' : ' disabled' ) . '/>' . '</p>';
+		echo '<p class="description">' . '<input type="input" id="path_prefix" name="advmo_settings[path_prefix]" value="' . esc_html( $path_prefix ) . '"' . ( $path_prefix_Active ? '' : ' disabled' ) . '/>' . '</p>'; // phpcs:ignore
 		echo '<p class="description">' . esc_html__( 'Add a common prefix to organize offloaded media files from this site in your cloud storage bucket.', 'advanced-media-offloader' ) . '</p>';
 		echo '</div>';
 	}
@@ -363,38 +363,38 @@ class GeneralSettings {
 	}
 
 	public function validateCloudProvider() {
-		if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'advmo_validate_provider')) {
-			wp_send_json_error(['message' => __('Invalid nonce!', 'advanced-media-offloader')]);
+		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'advmo_validate_provider' ) ) { // phpcs:ignore
+			wp_send_json_error( [ 'message' => __( 'Invalid nonce!', 'advanced-media-offloader' ) ] );
 			return;
 		}
 
-		$provider = sanitize_text_field($_POST['provider'] ?? '');
+		$provider = sanitize_text_field( $_POST['provider'] ?? '' );
 
-		if (empty($provider)) {
-			wp_send_json_error(['message' => __('No cloud provider selected!', 'advanced-media-offloader')]);
+		if ( empty( $provider ) ) {
+			wp_send_json_error( [ 'message' => __( 'No cloud provider selected!', 'advanced-media-offloader' ) ] );
 			return;
 		}
 
 		try {
-			$cloud_provider = CloudProviderFactory::create($provider);
+			$cloud_provider = CloudProviderFactory::create( $provider );
 
-			if (!$cloud_provider) {
-				throw new \Exception(__('Invalid cloud provider selected.', 'advanced-media-offloader'));
+			if ( ! $cloud_provider ) {
+				throw new \Exception( __( 'Invalid cloud provider selected.', 'advanced-media-offloader' ) );
 			}
 
 			$cloud_provider->checkConnection();
 
-			wp_send_json_success([
+			wp_send_json_success( [
 				'message' => sprintf(
-					__('Successfully connected to %s!', 'advanced-media-offloader'),
-					$cloud_provider->getProviderName()
-				)
-			]);
-		} catch (\Exception $e) {
-			wp_send_json_error([
-				'message' => __('Failed to establish a connection with the selected cloud provider.', 'advanced-media-offloader')
-					. ' ' . esc_html($e->getMessage())
-			], 500);
+					__( 'Successfully connected to %s!', 'advanced-media-offloader' ),
+					$cloud_provider->getProviderName(),
+        ),
+			] );
+		} catch ( \Exception $e ) {
+			wp_send_json_error( [
+				'message' => __( 'Failed to establish a connection with the selected cloud provider.', 'advanced-media-offloader' )
+					. ' ' . esc_html( $e->getMessage() ),
+			], 500 );
 		}
 	}
 

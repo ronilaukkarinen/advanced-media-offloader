@@ -62,7 +62,7 @@ class Commands {
         try {
             $this->cloud_provider_key = advmo_get_cloud_provider_key();
             if ( empty( $this->cloud_provider_key ) ) {
-              WP_CLI::error('No cloud provider configured. Please configure a provider in the plugin settings first.' );
+              WP_CLI::error( 'No cloud provider configured. Please configure a provider in the plugin settings first.' );
               return;
             }
 
@@ -110,14 +110,14 @@ class Commands {
 
             $deletionMode = '';
             switch ( $deleteLocalRule ) {
-                case 1:
-                  $deletionMode = ' (Smart Local Cleanup enabled - will keep only originals)';
-                  break;
-                case 2:
-                  $deletionMode = ' (Full Cloud Migration enabled - will remove all local files)';
-                  break;
-                default:
-                  $deletionMode = ' (keeping local files)';
+              case 1:
+                $deletionMode = ' (Smart Local Cleanup enabled - will keep only originals)';
+              break; //phpcs:ignore
+              case 2:
+                $deletionMode = ' (Full Cloud Migration enabled - will remove all local files)';
+              break; //phpcs:ignore
+              default:
+                $deletionMode = ' (keeping local files)';
             }
 
             $attachments = $this->get_unoffloaded_attachments( $batch_size );

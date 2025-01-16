@@ -81,9 +81,9 @@ class Offloader {
 
 		// Generate a new version
 		if ( ! advmo_is_media_organized_by_year_month() ) {
-			$new_version = date( 'YmdHis' );
+			$new_version = gmdate( 'YmdHis' );
 		} else {
-			$new_version = date( 'dHis' );
+			$new_version = gmdate( 'dHis' );
 		}
 
 		// Save the new version in post meta
@@ -256,7 +256,7 @@ class Offloader {
 				$status .= " (Bucket: $bucket)";
 			}
 			if ( $offloaded_at ) {
-				$status .= ' on ' . date( 'Y-m-d H:i:s', $offloaded_at );
+				$status .= ' on ' . gmdate( 'Y-m-d H:i:s', $offloaded_at );
 			}
 			$color = 'green';
 		} else {
