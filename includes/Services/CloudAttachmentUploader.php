@@ -94,7 +94,7 @@ class CloudAttachmentUploader {
             update_post_meta( $attachment_id, 'advmo_bucket', $this->cloudProvider->getBucket() );
 
             // Update the attachment URL in WordPress
-            $cdn_url = rtrim( $this->cloudProvider->getDomain(), '/' ) . '/' . $subdir . wp_basename( $file_path );
+            $cdn_url = $this->getProviderUrl() . '/' . $subdir . wp_basename( $file_path );
             update_post_meta( $attachment_id, '_wp_attached_file', $subdir . wp_basename( $file_path ) );
 
             // Update the guid and attachment metadata
@@ -353,5 +353,12 @@ class CloudAttachmentUploader {
         }
 
         return $file_path;
+    }
+
+    protected function getProviderUrl() {
+        if (method_exists($this->cloudProvider, 'getBaseUrl')) {
+            return rtrim($this->cloudProvider->getBaseUrl(), '/');
+        }
+        return rtrim($this->cloudProvider->getDomain(), '/');
     }
 }

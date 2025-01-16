@@ -362,6 +362,42 @@ class GeneralSettings {
 		}
 	}
 
+	public function validateCloudProvider() {
+		if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'advmo_validate_provider')) {
+			wp_send_json_error(['message' => __('Invalid nonce!', 'advanced-media-offloader')]);
+			return;
+		}
+
+		$provider = sanitize_text_field($_POST['provider'] ?? '');
+
+		if (empty($provider)) {
+			wp_send_json_error(['message' => __('No cloud provider selected!', 'advanced-media-offloader')]);
+			return;
+		}
+
+		try {
+			$cloud_provider = CloudProviderFactory::create($provider);
+
+			if (!$cloud_provider) {
+				throw new \Exception(__('Invalid cloud provider selected.', 'advanced-media-offloader'));
+			}
+
+			$cloud_provider->checkConnection();
+
+			wp_send_json_success([
+				'message' => sprintf(
+					__('Successfully connected to %s!', 'advanced-media-offloader'),
+					$cloud_provider->getProviderName()
+				)
+			]);
+		} catch (\Exception $e) {
+			wp_send_json_error([
+				'message' => __('Failed to establish a connection with the selected cloud provider.', 'advanced-media-offloader')
+					. ' ' . esc_html($e->getMessage())
+			], 500);
+		}
+	}
+
 	// Prevent cloning of the instance
 	private function __clone() {}
 

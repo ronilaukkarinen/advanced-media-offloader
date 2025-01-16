@@ -1,8 +1,9 @@
-### 3.1.2: 2025-01-14
+### 3.1.2: 2025-01-16
 
 * Fix compatibility with new AWS SDK
 * Feature: Upload a single media file to cloud storage
 * General fixes and improvements
+* Fix: add fallback support for cloud providers using getDomain() instead of getBaseUrl()
 
 ### 3.1.1: 2025-01-09
 
