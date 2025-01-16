@@ -6,6 +6,7 @@
 * Fix: add fallback support for cloud providers using getDomain() instead of getBaseUrl()
 * Fix: use CloudAttachmentUploader directly in CLI commands instead of protected BulkMediaOffloader task
 * Add debug logs for CloudAttachmentUploader
+* Fix: Add handleLocalFileDeletion method to CloudAttachmentUploader for proper file cleanup
 
 ### 3.1.1: 2025-01-09
 
