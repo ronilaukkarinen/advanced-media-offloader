@@ -364,24 +364,39 @@ class Commands {
     protected function process_attachments( $attachments, $dry_run, $verbose, $skip_deletion ) {
       $cloud_provider = CloudProviderFactory::create( $this->cloud_provider_key );
       $uploader = new CloudAttachmentUploader( $cloud_provider );
+      $failed_count = 0;
 
       foreach ( $attachments as $attachment_id ) {
         if ( $verbose ) {
           WP_CLI::line( sprintf( 'Processing attachment ID: %d', $attachment_id ) );
         }
 
+        // Check if file exists before attempting upload
+        $file_path = get_attached_file( $attachment_id );
+        if ( ! file_exists( $file_path ) ) {
+          if ( $verbose ) {
+            WP_CLI::warning( sprintf( 'Skipping missing file: %s', basename( $file_path ) ) );
+          }
+          continue;
+        }
+
         if ( $dry_run ) {
-          WP_CLI::line( sprintf( 'Would offload: %s', basename( get_attached_file( $attachment_id ) ) ) );
+          WP_CLI::line( sprintf( 'Would offload: %s', basename( $file_path ) ) );
           continue;
         }
 
         $result = $uploader->uploadAttachment( $attachment_id, $skip_deletion );
 
         if ( $result ) {
-          WP_CLI::success( sprintf( 'Successfully offloaded: %s', basename( get_attached_file( $attachment_id ) ) ) );
+          WP_CLI::success( sprintf( 'Successfully offloaded: %s', basename( $file_path ) ) );
         } else {
-          WP_CLI::warning( sprintf( 'Failed to offload: %s', basename( get_attached_file( $attachment_id ) ) ) );
+          $failed_count++;
+          WP_CLI::warning( sprintf( 'Failed to offload: %s', basename( $file_path ) ) );
         }
+      }
+
+      if ( $failed_count > 0 ) {
+        WP_CLI::warning( sprintf( '%d files failed to offload', $failed_count ) );
       }
     }
 }

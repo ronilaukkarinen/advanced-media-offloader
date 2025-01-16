@@ -63,9 +63,12 @@ class Offloader {
 		if ( $this->isOffloaded( $post_id ) ) {
 			$subDir = $this->get_attachment_subdir( $post_id );
 			$domain = rtrim( $this->cloudProvider->getDomain(), '/' );
-			$subDir = ltrim( $subDir, '/' );
+			$subDir = trim( $subDir, '/' );
 			$basename = basename( $url );
-			$url = $domain . '/' . $subDir . $basename;
+
+			// Build URL ensuring single slashes between parts
+			$parts = array_filter( [ $domain, $subDir, $basename ] ); // Remove empty elements
+			$url = implode( '/', $parts );
 		}
 		return $url;
 	}

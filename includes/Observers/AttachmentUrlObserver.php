@@ -31,6 +31,7 @@ class AttachmentUrlObserver implements ObserverInterface {
      */
     public function register(): void {
         add_filter( 'wp_get_attachment_url', [ $this, 'run' ], 10, 2 );
+        add_filter( 'wp_calculate_image_srcset', [ $this, 'modifyImageSrcset' ], 10, 5 );
     }
 
     /**
@@ -43,8 +44,37 @@ class AttachmentUrlObserver implements ObserverInterface {
     public function run( string $url, int $post_id ): string {
         if ( $this->is_offloaded( $post_id ) ) {
             $subDir = $this->get_attachment_subdir( $post_id );
-            $url = rtrim( $this->cloudProvider->getDomain(), '/' ) . '/' . ltrim( $subDir, '/' ) . basename( $url );
+            $domain = rtrim( $this->cloudProvider->getDomain(), '/' );
+            $subDir = trim( $subDir, '/' );
+            $basename = basename( $url );
+
+            // Build URL ensuring single slashes between parts
+            $parts = array_filter( [ $domain, $subDir, $basename ] ); // Remove empty elements
+            $url = implode( '/', $parts );
         }
         return $url;
+    }
+
+    /**
+     * Modify image srcset URLs if the media is offloaded.
+     *
+     * @param array  $sources    Array of image sources.
+     * @param array  $size_array Array of width and height values.
+     * @param string $image_src  The 'src' of the image.
+     * @param array  $image_meta The image meta data.
+     * @param int    $attachment_id The attachment ID.
+     * @return array Modified sources array.
+     */
+    public function modifyImageSrcset( $sources, $size_array, $image_src, $image_meta, $attachment_id ): array {
+      if ( $this->is_offloaded( $attachment_id ) ) {
+        $domain = rtrim( $this->cloudProvider->getDomain(), '/' );
+        $upload_dir = wp_get_upload_dir();
+        $base_url = rtrim( $upload_dir['baseurl'], '/' );
+
+        foreach ( $sources as $key => $source ) {
+          $sources[ $key ]['url'] = str_replace( $base_url, $domain, $source['url'] );
+        }
+      }
+      return $sources;
     }
 }

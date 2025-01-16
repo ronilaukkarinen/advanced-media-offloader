@@ -38,9 +38,9 @@ trait OffloaderTrait {
 
         // Generate a new version
         if ( ! advmo_is_media_organized_by_year_month() ) {
-            $new_version = date( 'YmdHis' );
+          $new_version = gmdate( 'YmdHis' );
         } else {
-            $new_version = date( 'dHis' );
+          $new_version = gmdate( 'dHis' );
         }
 
         // Save the new version in post meta
@@ -49,10 +49,15 @@ trait OffloaderTrait {
         return trailingslashit( $new_version );
     }
 
+    protected function sanitizePath( string $path ): string {
+      return trim( $path, '/' );
+    }
+
     public function get_attachment_subdir( $attachment_id ) {
         // Check if already offlaoded, return advmo_path
         if ( $this->is_offloaded( $attachment_id ) ) {
-            return get_post_meta( $attachment_id, 'advmo_path', true );
+            $path = get_post_meta( $attachment_id, 'advmo_path', true );
+            return $this->sanitizePath( $path );
         }
 
         $object_version = $this->get_object_version( $attachment_id );

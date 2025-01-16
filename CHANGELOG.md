@@ -8,6 +8,7 @@
 * Add debug logs for CloudAttachmentUploader
 * Fix: Add handleLocalFileDeletion method to CloudAttachmentUploader for proper file cleanup
 * Fix some images being shown with http instead of https causing mixed content errors
+* Fix corner case double slash issue which breaks the media library image URLs
 
 ### 3.1.1: 2025-01-09
 

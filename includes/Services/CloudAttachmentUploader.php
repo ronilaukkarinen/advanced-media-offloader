@@ -30,8 +30,13 @@ class CloudAttachmentUploader {
       $subdir = get_post_meta( $post_id, 'advmo_path', true );
       $domain = $this->cloudProvider->getDomain();
 
-      $domain = preg_replace( '#^https?://#', '', $domain );
-      return 'https://' . $domain . '/' . ltrim( $subdir, '/' ) . basename( $url );
+      $domain = rtrim( preg_replace( '#^https?://#', '', $domain ), '/' );
+      $subdir = trim( $subdir, '/' );
+      $basename = basename( $url );
+
+      // Build URL ensuring single slashes between parts
+      $parts = array_filter( [ 'https://' . $domain, $subdir, $basename ] );
+      return implode( '/', $parts );
     }
     return $url;
   }
@@ -101,7 +106,7 @@ class CloudAttachmentUploader {
       }
 
       // Update metadata to mark as offloaded
-      update_post_meta( $attachment_id, 'advmo_path', $subdir );
+      update_post_meta( $attachment_id, 'advmo_path', $this->sanitizePath( $subdir ) );
       update_post_meta( $attachment_id, 'advmo_offloaded', true );
       update_post_meta( $attachment_id, 'advmo_offloaded_at', time() );
       update_post_meta( $attachment_id, 'advmo_provider', $this->cloudProvider->getProviderName() );
