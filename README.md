@@ -4,6 +4,7 @@ This is an unofficial fork of the [Advanced Media Offloader](https://wordpress.o
 
 > [!WARNING]  
 > This plugin is NOT maintained by the original author and is not recommended for production use. Use with caution and at your own risk. Recommended to test with smaller sites before using on larger sites. WP CLI plugin works, but is work in progress.
+> **It is CRUCIAL that you backup your media library, database and codebase before using this plugin.**
 
 ## Description
 
