@@ -1,3 +1,7 @@
+### 3.1.3: 2025-01-17
+
+* Add `wp advmo fix_404s [--dry-run] [--verbose]` command to fix media items that are 404ing by checking if they exist in cloud storage
+
 ### 3.1.2: 2025-01-16
 
 * Fix compatibility with new AWS SDK

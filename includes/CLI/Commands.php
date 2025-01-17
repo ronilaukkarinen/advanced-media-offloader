@@ -324,6 +324,165 @@ class Commands {
         }
     }
 
+    /**
+     * Fix media items that are 404ing by checking if they exist in cloud storage
+     *
+     * ## OPTIONS
+     *
+     * [--dry-run]
+     * : Whether to actually update the metadata or just show what would be updated
+     *
+     * [--verbose]
+     * : Show verbose output
+     *
+     * ## EXAMPLES
+     *
+     *     wp advmo fix_404s
+     *     wp advmo fix_404s --dry-run
+     *     wp advmo fix_404s --verbose
+     *
+     * @when after_wp_load
+     */
+    public function fix_404s( $args, $assoc_args ) {
+      $dry_run = isset( $assoc_args['dry-run'] );
+      $verbose = isset( $assoc_args['verbose'] );
+
+      // Get settings and validate cloud provider
+      $settings = get_option( 'advmo_settings', [] );
+      if ( empty( $settings['cloud_provider'] ) ) {
+        WP_CLI::error( 'Cloud provider settings are incomplete. Please configure the plugin settings first.' );
+        return;
+      }
+
+      $cloud_provider_key = advmo_get_cloud_provider_key();
+      if ( empty( $cloud_provider_key ) ) {
+        WP_CLI::error( 'No cloud provider configured. Please configure a provider in the plugin settings first.' );
+        return;
+      }
+
+      try {
+        $cloud_provider = CloudProviderFactory::create( $cloud_provider_key );
+        $domain = rtrim( $cloud_provider->getDomain(), '/' );
+        $bucket = $cloud_provider->getBucket();
+      } catch ( \Exception $e ) {
+        WP_CLI::error( 'Could not initialize cloud provider: ' . $e->getMessage() );
+        return;
+      }
+
+      // Get site URL for comparison
+      $site_url = get_site_url();
+      $site_domain = parse_url( $site_url, PHP_URL_HOST );
+
+      // Get media library URL settings
+      $upload_dir = wp_upload_dir();
+      $media_url = $upload_dir['baseurl'];
+      $media_domain = parse_url( $media_url, PHP_URL_HOST );
+
+      // Get ALL attachments
+      $attachments = get_posts( [
+        'post_type' => 'attachment',
+        'posts_per_page' => -1,
+        'post_status' => 'any',
+      ] );
+
+      $count = 0;
+      $fixed = 0;
+
+      WP_CLI::log( sprintf( 'Found %d attachments to check...', count( $attachments ) ) );
+
+      foreach ( $attachments as $attachment ) {
+        $count++;
+
+        // Get current URL and file path
+        $url = wp_get_attachment_url( $attachment->ID );
+        $file = get_post_meta( $attachment->ID, '_wp_attached_file', true );
+
+        if ( empty( $file ) ) {
+          if ( $verbose ) {
+            WP_CLI::warning( sprintf( 'Attachment %d has no file path', $attachment->ID ) );
+          }
+          continue;
+        }
+
+        // Get the proper subdirectory structure
+        $subdir = '';
+        if ( preg_match( '/^(\d{4}\/\d{2})\//', $file, $matches ) ) {
+          $subdir = $matches[1] . '/';
+        } else {
+          $post = get_post( $attachment->ID );
+          $time = strtotime( $post->post_date );
+          $subdir = gmdate( 'Y/m', $time ) . '/';
+        }
+
+        // Check if URL is using the cloud provider's domain
+        $url_domain = parse_url( $url, PHP_URL_HOST );
+        $cloud_domain = parse_url( $domain, PHP_URL_HOST );
+
+        // First check if the file exists in cloud storage
+        $cloud_url = $domain . '/' . ltrim( $file, '/' );
+        $cloud_response = wp_remote_head( $cloud_url );
+        $exists_in_cloud = ! is_wp_error( $cloud_response ) && wp_remote_retrieve_response_code( $cloud_response ) === 200;
+
+        // Then check if URL points to local domain and if the file exists locally
+        $upload_dir = wp_upload_dir();
+        $local_file = $upload_dir['basedir'] . '/' . ltrim( $file, '/' );
+        $exists_locally = file_exists( $local_file );
+
+        if ( $verbose ) {
+          WP_CLI::log( sprintf(
+            'Checking attachment %d: URL: %s (In Cloud: %s, Local File: %s)',
+            $attachment->ID,
+            $url,
+            $exists_in_cloud ? 'yes' : 'no',
+            $exists_locally ? 'yes' : 'no'
+          ) );
+        }
+
+        // File needs fixing if:
+        // 1. It exists in cloud but URL points elsewhere
+        // 2. It exists locally but needs to be uploaded to cloud
+        if ( $exists_in_cloud && $url_domain !== $cloud_domain ) {
+          // Update URL to point to cloud
+          if ( ! $dry_run ) {
+            update_post_meta( $attachment->ID, 'advmo_bucket', $bucket );
+            update_post_meta( $attachment->ID, 'advmo_offloaded', '1' );
+            update_post_meta( $attachment->ID, 'advmo_offloaded_at', time() );
+            update_post_meta( $attachment->ID, 'advmo_path', dirname( $file ) );
+            update_post_meta( $attachment->ID, 'advmo_provider', $cloud_provider->getName() );
+            update_post_meta( $attachment->ID, '_wp_attached_file', $file );
+          } else {
+            WP_CLI::log( sprintf( 'Would update URL for attachment %d to use cloud storage', $attachment->ID ) );
+          }
+          $fixed++;
+        } elseif ( $exists_locally && ! $exists_in_cloud ) {
+          // Upload to cloud and update URL
+          if ( ! $dry_run ) {
+            $uploader = new CloudAttachmentUploader( $cloud_provider );
+            $result = $uploader->uploadAttachment( $attachment->ID, true );
+            if ( $result ) {
+              $fixed++;
+              if ( $verbose ) {
+                WP_CLI::success( sprintf( 'Uploaded and updated attachment %d', $attachment->ID ) );
+              }
+            }
+          } else {
+            WP_CLI::log( sprintf( 'Would upload attachment %d to cloud storage', $attachment->ID ) );
+            $fixed++;
+          }
+        }
+
+        if ( $verbose && $count % 100 === 0 ) {
+          WP_CLI::log( sprintf( 'Processed %d attachments...', $count ) );
+        }
+      }
+
+      if ( $dry_run ) {
+        WP_CLI::success( sprintf( 'Found %d files that would be fixed', $fixed ) );
+      } else {
+        WP_CLI::success( sprintf( 'Fixed %d files', $fixed ) );
+      }
+    }
+
     private function get_unoffloaded_attachments( $batch_size ) {
         return get_posts([
           'post_type' => 'attachment',
