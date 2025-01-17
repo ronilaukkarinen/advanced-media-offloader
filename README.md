@@ -27,6 +27,7 @@ wp advmo offload [--batch <number>] [--dry-run] [--verbose] [--all] [--yes]
 - `wp advmo offload --batch-size=100` - Offload 100 files per batch.
 - `wp advmo offload --all` - Offload all media to cloud storage.
 - `wp advmo upload 123 [--dry-run]` - Offload a single media file to cloud storage.
+- `wp advmo fix_404s [--dry-run] [--verbose]` - (A debug command) Fix media items that are 404ing by checking if they exist in cloud storage
 
 ## Installation
 
