@@ -1,6 +1,7 @@
 ### 3.1.4: 2025-02-11
 
 * Fix corner case with srcset URLs, when using `the_post_thumbnail()` in the theme, Fixes T-25302
+* Fix deletion in some cases if v. 2.0.3-dev has been used before (the deletion process has evolved across versions. In the latest version, the deletion is handled by the deleteAttachment method instead)
 
 ### 3.1.3: 2025-01-17
 

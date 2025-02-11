@@ -154,7 +154,26 @@ abstract class S3_Provider {
 	 */
 	public function deleteAttachment( $attachment_id ) {
 		try {
-			// Delete the main file
+			// First verify if this attachment is actually offloaded
+			$is_offloaded = get_post_meta( $attachment_id, 'advmo_offloaded', true );
+			if ( ! $is_offloaded ) {
+				// Not offloaded, so nothing to delete from cloud
+				return true;
+			}
+
+			// Get required meta data
+			$attached_file = get_post_meta( $attachment_id, '_wp_attached_file', true );
+			$advmo_path = get_post_meta( $attachment_id, 'advmo_path', true );
+
+			// If meta is missing but marked as offloaded, clean up the inconsistent state
+			if ( ! $attached_file || ! $advmo_path ) {
+				error_log( "Advanced Media Offloader: Cleaning up inconsistent state for attachment {$attachment_id}" ); // phpcs:ignore
+				delete_post_meta( $attachment_id, 'advmo_offloaded' );
+				delete_post_meta( $attachment_id, 'advmo_path' );
+				return true;
+			}
+
+			// Proceed with deletion
 			$key = $this->getAttachmentKey( $attachment_id );
 			$this->deleteS3Object( $key );
 
@@ -182,6 +201,7 @@ abstract class S3_Provider {
 			$this->deleteS3Object( $thumbnail_key );
 		}
 	}
+
 	private function deleteImageBackupSizes( $attachment_id, $base_dir ) {
 		$backup_sizes = get_post_meta( $attachment_id, '_wp_attachment_backup_sizes', true );
 
@@ -200,7 +220,7 @@ abstract class S3_Provider {
 		$advmo_path = get_post_meta( $attachment_id, 'advmo_path', true );
 
 		if ( ! $attached_file || ! $advmo_path ) {
-			throw new \Exception( "Unable to find S3 key for attachment ID {$attachment_id}" );
+			throw new \Exception( "Unable to find S3 key for attachment ID {$attachment_id}" ); // phpcs:ignore
 		}
 
 		$file_name = basename( $attached_file );
