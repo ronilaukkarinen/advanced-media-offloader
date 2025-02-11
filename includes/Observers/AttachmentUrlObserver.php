@@ -67,12 +67,20 @@ class AttachmentUrlObserver implements ObserverInterface {
      */
     public function modifyImageSrcset( $sources, $size_array, $image_src, $image_meta, $attachment_id ): array {
       if ( $this->is_offloaded( $attachment_id ) ) {
+        $subDir = $this->get_attachment_subdir( $attachment_id );
         $domain = rtrim( $this->cloudProvider->getDomain(), '/' );
-        $upload_dir = wp_get_upload_dir();
-        $base_url = rtrim( $upload_dir['baseurl'], '/' );
 
         foreach ( $sources as $key => $source ) {
-          $sources[ $key ]['url'] = str_replace( $base_url, $domain, $source['url'] );
+          // Extract just the filename part without the path
+          $filename = pathinfo( $source['url'], PATHINFO_BASENAME );
+
+          // Remove any duplicate path prefix from filename if it exists
+          if ( strpos( $filename, basename( $subDir ) ) === 0 ) {
+            $filename = substr( $filename, strlen( basename( $subDir ) ) );
+          }
+          // Build URL ensuring single slashes between parts
+          $parts = array_filter( [ $domain, trim( $subDir, '/' ), trim( $filename, '/' ) ] );
+          $sources[ $key ]['url'] = implode( '/', $parts );
         }
       }
       return $sources;
